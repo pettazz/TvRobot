@@ -18,17 +18,9 @@ class TvRobot:
 
     def __init__(self):
         #set up ^c
-        if os.name == "nt":
-            try:
-                import win32api
-                win32api.SetConsoleCtrlHandler(signal_catch_stop, True)
-            except ImportError:
-                version = ".".join(map(str, sys.version_info[:2]))
-                raise Exception("pywin32 not installed for Python " + version)
-        else:
-            import signal
-            signal.signal(signal.SIGINT, self.signal_catch_stop)
-            signal.signal(signal.SIGTERM, self.signal_catch_stop)
+        import signal
+        signal.signal(signal.SIGINT, self.signal_catch_stop)
+        signal.signal(signal.SIGTERM, self.signal_catch_stop)
 
         #get dem options
         o = self._create_parser()
