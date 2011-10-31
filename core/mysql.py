@@ -8,14 +8,14 @@ import MySQLdb
 import time
 import mysql_conf as conf
 
-class DbHelper():
+class DatabaseManager():
     """This class wraps database fucntions for us for easy use.  It connects to the database"""
 
     def __init__(self, conf_creds=None):
         """
         Gets database information from conf.py and creates a connection.
         """
-        db_server, db_user, db_pass, db_schema = conf.APP_CREDS[conf.Apps.TVROBOT]['prod']
+        db_server, db_user, db_pass, db_schema = conf.APP_CREDS[conf.Apps.TVROBOT]['PROD']
         retry_count = 3
         backoff = 10
         count = 0

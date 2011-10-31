@@ -1,3 +1,4 @@
 *.pyc
 logs/
 selenium-server.jar
+.DS_Store
