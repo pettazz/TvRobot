@@ -6,7 +6,7 @@ Wrapper for MySQL functions to make life easier
 
 import MySQLdb
 import time
-import mysql_conf as conf
+import core.config as config
 
 class DatabaseManager():
     """This class wraps database fucntions for us for easy use.  It connects to the database"""
@@ -15,13 +15,15 @@ class DatabaseManager():
         """
         Gets database information from conf.py and creates a connection.
         """
-        db_server, db_user, db_pass, db_schema = conf.APP_CREDS[conf.Apps.TVROBOT]['PROD']
         retry_count = 3
         backoff = 10
         count = 0
         while count < retry_count:
             try:
-                self.conn = MySQLdb.connect(host=db_server, user=db_user,passwd=db_pass,db=db_schema)
+                self.conn = MySQLdb.connect(host=config.DATABASE['server'],
+                    user=config.DATABASE['user'],
+                    passwd=config.DATABASE['password'],
+                    db=config.DATABASE['schema'])
                 self.conn.autocommit(True)
                 self.cursor = self.conn.cursor()
                 return
