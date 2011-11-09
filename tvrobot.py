@@ -56,14 +56,13 @@ class TvRobot:
             (config.SELENIUM['server'], config.SELENIUM['timeout']))
 
         #try to connect to the Transmission server
-        print "try to connect to the Transmission server"
         self.daemon = transmissionrpc.Client(
             address=config.TRANSMISSION['server'], 
             port=config.TRANSMISSION['port'], 
             user=config.TRANSMISSION['user'], 
             password=config.TRANSMISSION['password'])
         
-        print "init done."
+        print "Sup everybody. I'm a friendly TvRobot. Beep."
 
     def __signal_catch_stop(self, signal, frame = None):
         """catch a ctrl-c and kill the program"""
@@ -86,6 +85,7 @@ class TvRobot:
         max_size = 0
         file_id = None
         for torrent_id in files:
+            print "beep booping torrent #%s" % torrent_id
             for f in files[torrent_id]:
                 ext = files[torrent_id][f]['name'].rsplit('.', 1)[1]
                 if ext in config.FILETYPES['video'] and \
@@ -107,7 +107,10 @@ class TvRobot:
             SELECT type FROM Download WHERE
             transmission_id = %(torrent_id)s
         """
-        return DatabaseManager().fetchone_query_and_close(query, {'torrent_id': torrent_id})[0]
+        result = DatabaseManager().fetchone_query_and_close(query, {'torrent_id': torrent_id})
+        if result is not None:
+            result = result[0]
+        return result
             
     def __move_video_file(self, file_path, file_type):
         if config.TVROBOT['completed_move_method'] == 'FABRIC':
@@ -134,20 +137,21 @@ class TvRobot:
     ##############################
     def clean_torrents(self):
         torrents = self.daemon.list()
-        print torrents
+        print "I'm gonna try to beep these torrents: %s" % torrents
         for num in torrents:
             if torrents[num].status == 'seeding' or torrents[num].status == 'stopped':
                 video_file_id = self.__get_video_file_id(self.daemon.get_files(num))
-                if video_file_id is not None:
+                video_type = self.__get_torrent_type(num)
+                if video_file_id is not None and video_type is not None:
                     video_path = "%s/%s" % (
                         self.daemon.get_session().download_dir,
                         self.daemon.get_files(num)[num][video_file_id]['name'])
-                    video_type = self.__get_torrent_type(num)
-                    print "moving %s file `%s`..." % (video_type, self.daemon.get_files(num)[num][video_file_id]['name'])
+                    print "beep beep bopping %s file `%s`..." % (video_type, self.daemon.get_files(num)[num][video_file_id]['name'])
                     self.__move_video_file(video_path, video_type)
                     self.daemon.remove(num, delete_data = True)
+                    print "beep. File's done."
                 else:
-                    print "Skipping compressed file: %s" % num 
+                    print "I don't know how to beep boop this kind of download yet. Skipping torrent # %s" % num 
 
 
 #LETS DO THIS SHIT
