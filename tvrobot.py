@@ -35,7 +35,7 @@ class TvRobot:
             os.mkdir(config.TVROBOT['log_path'])
 
         #start the selenium server if we need to and try to connect
-        if config.SELENIUM['server'] == "localhost":
+        if config.SELENIUM['server'] == "localhost" and False:
             selenium_launcher.execute_selenium(
                 config.SELENIUM['server'], 
                 config.SELENIUM['port'],
@@ -123,7 +123,7 @@ class TvRobot:
                     stderr=open("%s/log_fabfileError.txt" % (config.TVROBOT['log_path']), "a"),
                     shell=True)
             except Exception, e:
-                print "AGH, FUCK."
+                print "BEEEEEEEEEEEEEEEEEEEP. OW."
                 raise e
         else: #config.TVROBOT['completed_move_method'] == 'LOCAL':
             pass
@@ -140,18 +140,25 @@ class TvRobot:
         print "I'm gonna try to beep these torrents: %s" % torrents
         for num in torrents:
             if torrents[num].status == 'seeding' or torrents[num].status == 'stopped':
-                video_file_id = self.__get_video_file_id(self.daemon.get_files(num))
                 video_type = self.__get_torrent_type(num)
-                if video_file_id is not None and video_type is not None:
-                    video_path = "%s/%s" % (
-                        self.daemon.get_session().download_dir,
-                        self.daemon.get_files(num)[num][video_file_id]['name'])
-                    print "beep beep bopping %s file `%s`..." % (video_type, self.daemon.get_files(num)[num][video_file_id]['name'])
-                    self.__move_video_file(video_path, video_type)
-                    self.daemon.remove(num, delete_data = True)
-                    print "beep. File's done."
+                if video_type in ('Episode', 'Movie'):
+                    video_file_id = self.__get_video_file_id(self.daemon.get_files(num))
+                    if video_file_id is not None and video_type is not None:
+                        video_path = "%s/%s" % (
+                            self.daemon.get_session().download_dir,
+                            self.daemon.get_files(num)[num][video_file_id]['name'])
+                        print "beep beep bopping %s file `%s`..." % (video_type, self.daemon.get_files(num)[num][video_file_id]['name'])
+                        self.__move_video_file(video_path, video_type)
+                        self.daemon.remove(num, delete_data = True)
+                        print "beep. File's done."
+                    else:
+                        print "I don't know how to beep boop this kind of download yet. Skipping torrent # %s" % num 
+                elif video_type in ('Set', 'Season', 'Series'):
+                    print "Beeeeeeeooooppppp I can't do it yet. Too many files. :( Skipping torrent # %s" % num 
                 else:
-                    print "I don't know how to beep boop this kind of download yet. Skipping torrent # %s" % num 
+                    print "Booeep. Do I know you? Skipping torrent # %s" % num 
+            else:
+                print "Boop. This one is still working. Skipping torrent # %s" % num 
 
 
 #LETS DO THIS SHIT
