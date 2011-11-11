@@ -8,9 +8,9 @@ env.hosts = [config.TRANSMISSION['SSH']['user'] + '@' + \
              config.TRANSMISSION['server'] + ':' + \
              str(config.TRANSMISSION['SSH']['port'])]
 
-def move_video(local_path = None, remote_path = None):
-    local_path = shellquote(local_path)
-    remote_path = shellquote(remote_path)
+def move_video(local_path, remote_path):
+    local_path = __shellquote(local_path)
+    remote_path = __shellquote(remote_path)
 
     run('scp -P %s %s %s@%s:%s' % 
         (config.MEDIA['port'],
@@ -19,5 +19,17 @@ def move_video(local_path = None, remote_path = None):
         config.MEDIA['server'],
         remote_path))
 
-def shellquote(s):
-    return "'" + s.replace("'", "'\\''") + "'"
+def unrar_file(rar_path, save_path):
+    rar_path = __shellquote(rar_path)
+    save_path = __shellquote(save_path)
+
+    run('mkdir %s' % save_path)
+    run('unrar e %s %s' % (rar_path, save_path))
+
+def clean_unrar_uuid(guid_path):
+    guid = __shellquotes(guid_path)
+
+    run('rm -r %s' % guid_path)
+
+def __shellquote(s):
+    return s.replace(' ', '\ ')
