@@ -26,7 +26,7 @@ def unrar_file(rar_path, save_path):
     run('mkdir %s' % save_path)
     run('unrar e %s %s' % (rar_path, save_path))
 
-def clean_unrar_uuid(guid_path):
+def delete_file(guid_path):
     guid = __shellquotes(guid_path)
 
     run('rm -r %s' % guid_path)

@@ -131,6 +131,20 @@ class TvRobot:
         else: #config.TVROBOT['completed_move_method'] == 'LOCAL':
             pass    
         return "%s/*" % guid 
+            
+    def __delete_video_file(self, file_path):
+        if config.TVROBOT['completed_move_method'] == 'FABRIC':
+            file_path = self.__shellquote(file_path)
+            try:
+                subprocess.check_call("fab delete_file:rar_path=%s" % (file_path),
+                    stdout=open("%s/log_fabfileOutput.txt" % (config.TVROBOT['log_path']), "a"),
+                    stderr=open("%s/log_fabfileError.txt" % (config.TVROBOT['log_path']), "a"),
+                    shell=True)
+            except Exception, e:
+                print "BEEEEEEEEEEEEEEEEEEEP. OW."
+                raise e
+        else: #config.TVROBOT['completed_move_method'] == 'LOCAL':
+            pass     
 
     def __move_video_file(self, file_path, file_type):
         if config.TVROBOT['completed_move_method'] == 'FABRIC':
@@ -169,6 +183,7 @@ class TvRobot:
                             video_file_name)
                         print "beep beep bopping %s file `%s`..." % (video_type, video_file_name)
                         self.__move_video_file(video_path, video_type)
+                        self.__delete_video_file(video_path)
                         self.daemon.remove(num, delete_data = True)
                         print "beep. File's done."
                     else:
