@@ -1,7 +1,7 @@
 from __future__ import with_statement
 from fabric.api import *
 from fabric.contrib.console import confirm
-
+import time
 import core.config as config
 
 env.hosts = [config.TRANSMISSION['SSH']['user'] + '@' + \
@@ -26,10 +26,11 @@ def unrar_file(rar_path, save_path):
     run('mkdir %s' % save_path)
     run('unrar e %s %s' % (rar_path, save_path))
 
-def delete_file(guid_path):
-    guid = __shellquotes(guid_path)
+def delete_file(remote_path):
+    remote_path = __shellquote(remote_path)
 
-    run('rm -r %s' % guid_path)
+    run('rm -r %s' % remote_path)
+    time.sleep(20)
 
 def __shellquote(s):
-    return s.replace(' ', '\ ')
+    return s.replace(' ', '\ ').replace('(', '\(').replace(')', '\)')

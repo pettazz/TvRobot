@@ -77,8 +77,11 @@ class TvRobot:
         desc = "TV ROBOT CAN GET YOUR TV AND MOVIES BECAUSE FUCK YEAH!"
 
         o = OptionParser(usage=usage, description=desc)
-        #o.add_option("-l", "--log_path", default="logs", action="store", 
-        #type="string", help="Path to dump all the logs into.")
+        o.add_option("-a", "--add-torrent", action="store", default=None, dest="add_torrent",
+        help="Adds the specified torrent and exits.")
+
+        o.add_option("-t", "--torrent_type", action="store", default="Episode", dest="add_torrent_type", choices=("Movie", "Episode", "Series", "Season", "Set"),
+        help="Specify the type of torrent to add.")
 
         return o
 
@@ -99,7 +102,7 @@ class TvRobot:
                         return None
                     elif ext == 'rar':
                         print strings.UNRAR
-                        file_name = self.__unrar_file(files[torrent_id][f]['name'])
+                        return self.__unrar_file(files[torrent_id][f]['name'])
                     else:
                         return None       
         return file_name
@@ -136,7 +139,8 @@ class TvRobot:
         if config.TVROBOT['completed_move_method'] == 'FABRIC':
             file_path = self.__shellquote(file_path)
             try:
-                subprocess.check_call("fab delete_file:rar_path=%s" % (file_path),
+                #this isnt a check_call because a lot can go wrong here and its not mission critical
+                subprocess.call("fab delete_file:remote_path=%s" % (file_path),
                     stdout=open("%s/log_fabfileOutput.txt" % (config.TVROBOT['log_path']), "a"),
                     stderr=open("%s/log_fabfileError.txt" % (config.TVROBOT['log_path']), "a"),
                     shell=True)
@@ -163,12 +167,29 @@ class TvRobot:
             pass
 
     def __shellquote(self, s):
-        return s.replace(' ', '\ ')
+        return s.replace(' ', '\ ').replace('(', '\(').replace(')', '\)')
 
 
     ##############################
     # public methods
     ##############################
+    def add_torrent(self):
+        torrent_file = open(self.options.add_torrent, "rb").read().encode("base64")
+        torrent = self.daemon.add(torrent_file)
+        guid = uuid.uuid4()
+
+        query = """
+            INSERT INTO Download
+            (guid, transmission_id, type)
+            VALUES
+            (%(guid)s, %(transmission_id)s, %(type)s)
+        """
+        DatabaseManager().execute_query_and_close(query, {
+            "guid": guid, 
+            "transmission_id": torrent.keys()[0], 
+            "type": self.options.add_torrent_type
+        })
+
     def clean_torrents(self):
         torrents = self.daemon.list()
         print "I'm gonna try to beep these torrents: %s" % torrents
@@ -199,4 +220,7 @@ class TvRobot:
 #LETS DO THIS SHIT
 if __name__ == '__main__':
     robot = TvRobot()
-    robot.clean_torrents()
+    if robot.options.add_torrent is not None:
+        robot.add_torrent()
+    else:
+        robot.clean_torrents()
