@@ -36,25 +36,26 @@ class TvRobot:
             os.mkdir(config.TVROBOT['log_path'])
 
         #start the selenium server if we need to and try to connect
-        """if config.SELENIUM['server'] == "localhost":
-            selenium_launcher.execute_selenium(
-                config.SELENIUM['server'], 
-                config.SELENIUM['port'],
-                config.SELENIUM['log_path'])
+        if not (self.options.clean_only or (self.options.add_torrent is not None)):
+            if config.SELENIUM['server'] == "localhost":
+                selenium_launcher.execute_selenium(
+                    config.SELENIUM['server'], 
+                    config.SELENIUM['port'],
+                    config.SELENIUM['log_path'])
 
-        for x in range(config.SELENIUM['timeout']):
-            try:
-                self.driver = webdriver.Remote("http://%s:%s/wd/hub"%
-                    (config.SELENIUM['server'], config.SELENIUM['port']),
-                    webdriver.DesiredCapabilities.HTMLUNIT)
-                break
-            except:
-                time.sleep(1)
+            for x in range(config.SELENIUM['timeout']):
+                try:
+                    self.driver = webdriver.Remote("http://%s:%s/wd/hub"%
+                        (config.SELENIUM['server'], config.SELENIUM['port']),
+                        webdriver.DesiredCapabilities.HTMLUNIT)
+                    break
+                except:
+                    time.sleep(1)
 
-        if not hasattr(self, 'driver') or self.driver is None:
-            raise Exception (
-            "Couldn't connect to the selenium server at %s after %s seconds." % 
-            (config.SELENIUM['server'], config.SELENIUM['timeout']))"""
+            if not hasattr(self, 'driver') or self.driver is None:
+                raise Exception (
+                "Couldn't connect to the selenium server at %s after %s seconds." % 
+                (config.SELENIUM['server'], config.SELENIUM['timeout']))
 
         #try to connect to the Transmission server
         self.daemon = transmissionrpc.Client(
@@ -63,10 +64,11 @@ class TvRobot:
             user=config.TRANSMISSION['user'], 
             password=config.TRANSMISSION['password'])
         
-        print "Sup everybody. I'm a friendly TvRobot. Beep."
+        print strings.HELLO
 
     def __signal_catch_stop(self, signal, frame = None):
         """catch a ctrl-c and kill the program"""
+        print strings.KILL_CAUGHT
         if hasattr(self, "driver"):
             self.driver.quit()
         os.kill(os.getpid(), 9) 
@@ -77,6 +79,12 @@ class TvRobot:
         desc = "TV ROBOT CAN GET YOUR TV AND MOVIES BECAUSE FUCK YEAH!"
 
         o = OptionParser(usage=usage, description=desc)
+        o.add_option("-c", "--clean_only", action="store_true", dest="clean_only", 
+        help="Cleans up any already completed torrents and exits. Does not search for or add any torrents.")
+
+        o.add_option("-s", "--search_only", action="store_true", dest="search_only", 
+        help="Searches for and adds any scheduled Episodes or Movies and exits. Does not clean up finished torrents.")
+
         o.add_option("-a", "--add-torrent", action="store", default=None, dest="add_torrent",
         help="Adds the specified torrent and exits.")
 
@@ -89,7 +97,7 @@ class TvRobot:
         max_size = 0
         file_id = None
         for torrent_id in files:
-            print "beep booping torrent #%s" % torrent_id
+            print strings.FINDING_VIDEO_FILE % torrent_id
             for f in files[torrent_id]:
                 ext = files[torrent_id][f]['name'].rsplit('.', 1)[1]
                 if ext in config.FILETYPES['video'] and \
@@ -129,7 +137,7 @@ class TvRobot:
                     stderr=open("%s/log_fabfileError.txt" % (config.TVROBOT['log_path']), "a"),
                     shell=True)
             except Exception, e:
-                print "BEEEEEEEEEEEEEEEEEEEP. OW."
+                print strings.CAUGHT_EXCEPTION
                 raise e
         else: #config.TVROBOT['completed_move_method'] == 'LOCAL':
             pass    
@@ -145,7 +153,7 @@ class TvRobot:
                     stderr=open("%s/log_fabfileError.txt" % (config.TVROBOT['log_path']), "a"),
                     shell=True)
             except Exception, e:
-                print "BEEEEEEEEEEEEEEEEEEEP. OW."
+                print strings.CAUGHT_EXCEPTION
                 raise e
         else: #config.TVROBOT['completed_move_method'] == 'LOCAL':
             pass     
@@ -161,7 +169,7 @@ class TvRobot:
                     stderr=open("%s/log_fabfileError.txt" % (config.TVROBOT['log_path']), "a"),
                     shell=True)
             except Exception, e:
-                print "BEEEEEEEEEEEEEEEEEEEP. OW."
+                print strings.CAUGHT_EXCEPTION
                 raise e
         else: #config.TVROBOT['completed_move_method'] == 'LOCAL':
             pass
@@ -174,10 +182,12 @@ class TvRobot:
     # public methods
     ##############################
     def add_torrent(self):
+        print strings.ADDING_TORRENT 
         torrent_file = open(self.options.add_torrent, "rb").read().encode("base64")
         torrent = self.daemon.add(torrent_file)
-        guid = uuid.uuid4()
 
+        print strings.ADDING_DOWNLOAD % self.options.add_torrent_type
+        guid = uuid.uuid4()
         query = """
             INSERT INTO Download
             (guid, transmission_id, type)
@@ -189,6 +199,8 @@ class TvRobot:
             "transmission_id": torrent.keys()[0], 
             "type": self.options.add_torrent_type
         })
+
+        print strings.ADD_COMPLETED
 
     def clean_torrents(self):
         torrents = self.daemon.list()
@@ -202,19 +214,24 @@ class TvRobot:
                         video_path = "%s/%s" % (
                             self.daemon.get_session().download_dir,
                             video_file_name)
-                        print "beep beep bopping %s file `%s`..." % (video_type, video_file_name)
+                        print strings.MOVING_VIDEO_FILE % (video_type, video_file_name)
                         self.__move_video_file(video_path, video_type)
-                        self.__delete_video_file(video_path)
+
+                        #if this was a rar created folder, we want to delete the whole thing
+                        #otherwise we can count on transmission to delete it properly
+                        if video_path.endswith('/*'):
+                            file_path = video_path[:-2]
+                            self.__delete_video_file(file_path)
                         self.daemon.remove(num, delete_data = True)
-                        print "beep. File's done."
+                        print strings.DOWNLOAD_CLEAN_COMPLETED
                     else:
-                        print "I don't know how to beep boop this kind of download yet. Skipping torrent # %s" % num 
+                        print strings.UNSUPPORTED_FILE_TYPE % num 
                 elif video_type in ('Set', 'Season', 'Series'):
-                    print "Beeeeeeeooooppppp I can't do it yet. Too many files. :( Skipping torrent # %s" % num 
+                    print strings.UNSUPPORTED_DOWNLOAD_TYPE % num 
                 else:
-                    print "Booeep. Do I know you? Skipping torrent # %s" % num 
+                    print strings.UNRECOGNIZED_TORRENT % num 
             else:
-                print "Boop. This one is still working. Skipping torrent # %s" % num 
+                print strings.TORRENT_DOWNLOADING % num 
 
 
 #LETS DO THIS SHIT
