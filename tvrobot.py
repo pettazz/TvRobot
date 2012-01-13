@@ -79,16 +79,16 @@ class TvRobot:
         desc = "TV ROBOT CAN GET YOUR TV AND MOVIES BECAUSE FUCK YEAH!"
 
         o = OptionParser(usage=usage, description=desc)
-        o.add_option("-c", "--clean_only", action="store_true", dest="clean_only", 
+        o.add_option("-c", "--clean-only", action="store_true", dest="clean_only", 
         help="Cleans up any already completed torrents and exits. Does not search for or add any torrents.")
 
-        o.add_option("-s", "--search_only", action="store_true", dest="search_only", 
+        o.add_option("-s", "--search-only", action="store_true", dest="search_only", 
         help="Searches for and adds any scheduled Episodes or Movies and exits. Does not clean up finished torrents.")
 
         o.add_option("-a", "--add-torrent", action="store", default=None, dest="add_torrent",
         help="Adds the specified torrent and exits.")
 
-        o.add_option("-t", "--torrent_type", action="store", default="Episode", dest="add_torrent_type", choices=("Movie", "Episode", "Series", "Season", "Set"),
+        o.add_option("-t", "--torrent-type", action="store", default="Episode", dest="add_torrent_type", choices=("Movie", "Episode", "Series", "Season", "Set"),
         help="Specify the type of torrent to add.")
 
         return o
@@ -114,6 +114,25 @@ class TvRobot:
                     else:
                         return None       
         return file_name
+
+    def __get_all_video_file_paths(self, files, kill_samples = True):
+        videos = []
+        for torrent_id in files:
+            print strings.FINDING_VIDEO_FILE % torrent_id
+            for f in files[torrent_id]:
+                ext = files[torrent_id][f]['name'].rsplit('.', 1)[1]
+                if ext in config.FILETYPES['video']:
+                    if kill_samples:
+                        if "sample" not in files[torrent_id][f]['name']:
+                            videos.append(files[torrent_id][f]['name'])
+                    else:
+                        videos.append(files[torrent_id][f]['name'])
+                elif ext in config.FILETYPES['compressed']:
+                    raise Exception("I NEVER THOUGHT THIS WOULD HAPPEN OH GOD WHAT KIND OF A SICK MIND DOES THIS??")
+        if len(videos) > 0:
+            return videos
+        else:
+            return None
 
     def __get_torrent_type(self, torrent_id):
         query = """
@@ -175,7 +194,7 @@ class TvRobot:
             pass
 
     def __shellquote(self, s):
-        return s.replace(' ', '\ ').replace('(', '\(').replace(')', '\)')
+        return s.replace(' ', '\ ').replace('(', '\(').replace(')', '\)').replace("'", "\\'").replace('&', '\&')
 
 
     ##############################
@@ -209,11 +228,10 @@ class TvRobot:
             if torrents[num].status == 'seeding' or torrents[num].status == 'stopped':
                 video_type = self.__get_torrent_type(num)
                 if video_type in ('Episode', 'Movie'):
+                    #single file 
                     video_file_name = self.__get_video_file_path(self.daemon.get_files(num))
                     if video_file_name is not None and video_type is not None:
-                        video_path = "%s/%s" % (
-                            self.daemon.get_session().download_dir,
-                            video_file_name)
+                        video_path = "%s/%s" % (self.daemon.get_session().download_dir, video_file_name)
                         print strings.MOVING_VIDEO_FILE % (video_type, video_file_name)
                         self.__move_video_file(video_path, video_type)
 
@@ -227,6 +245,18 @@ class TvRobot:
                     else:
                         print strings.UNSUPPORTED_FILE_TYPE % num 
                 elif video_type in ('Set', 'Season', 'Series'):
+                    #some movies bro
+                    video_files = self.__get_all_video_file_paths(self.daemon.get_files(num), kill_samples=("sample" not in torrents[num].name.lower()))
+                    if video_files is not None and video_type is not None:
+                        for vidja in video_files:
+                            video_path = "%s/%s" % (self.daemon.get_session().download_dir, vidja)
+                            print strings.MOVING_VIDEO_FILE % (video_type, vidja)
+                            self.__move_video_file(video_path, video_type)
+                        self.daemon.remove(num, delete_data = True)
+                        print strings.DOWNLOAD_CLEAN_COMPLETED
+                    else:
+                        print strings.UNSUPPORTED_FILE_TYPE % num 
+                elif video_type is not None:
                     print strings.UNSUPPORTED_DOWNLOAD_TYPE % num 
                 else:
                     print strings.UNRECOGNIZED_TORRENT % num 
