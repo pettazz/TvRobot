@@ -33,4 +33,4 @@ def delete_file(remote_path):
     time.sleep(20)
 
 def __shellquote(s):
-    return s.replace(' ', '\ ').replace('(', '\(').replace(')', '\)').replace("'", "\\'").replace('&', '\&')
+    return s.replace(' ', '\ ').replace('(', '\(').replace(')', '\)').replace("'", "\\'").replace('&', '\&').replace(',', '\,').replace('!', '\!')

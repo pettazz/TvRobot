@@ -194,7 +194,7 @@ class TvRobot:
             pass
 
     def __shellquote(self, s):
-        return s.replace(' ', '\ ').replace('(', '\(').replace(')', '\)').replace("'", "\\'").replace('&', '\&')
+        return s.replace(' ', '\ ').replace('(', '\(').replace(')', '\)').replace("'", "\\'").replace('&', '\&').replace(',', '\,').replace('!', '\!')
 
 
     ##############################
