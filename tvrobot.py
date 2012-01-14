@@ -123,7 +123,7 @@ class TvRobot:
                 ext = files[torrent_id][f]['name'].rsplit('.', 1)[1]
                 if ext in config.FILETYPES['video']:
                     if kill_samples:
-                        if "sample" not in files[torrent_id][f]['name']:
+                        if "sample" not in files[torrent_id][f]['name'].lower() and "trailer" not in files[torrent_id][f]['name'].lower():
                             videos.append(files[torrent_id][f]['name'])
                     else:
                         videos.append(files[torrent_id][f]['name'])
@@ -183,7 +183,7 @@ class TvRobot:
             local_path = self.__shellquote(file_path)
             remote_path = self.__shellquote(config.MEDIA['remote_path'][file_type])
             try:
-                subprocess.check_call("fab move_video:local_path=%s,remote_path=%s" % (local_path, remote_path),
+                subprocess.check_call("fab move_video:local_path='%s',remote_path='%s'" % (local_path, remote_path),
                     stdout=open("%s/log_fabfileOutput.txt" % (config.TVROBOT['log_path']), "a"),
                     stderr=open("%s/log_fabfileError.txt" % (config.TVROBOT['log_path']), "a"),
                     shell=True)
