@@ -47,5 +47,6 @@ UNSUPPORTED_FILE_TYPE = "I don't know how to beep boop this kind of download yet
 DOWNLOAD_CLEAN_COMPLETED = "beep. File's done."
 
 ADDING_TORRENT = "beep beep. Starting to download this torrent."
+ADDING_MAGNET = "bzzzzzeeeeep Adding this magnet before it kills me."
 ADDING_DOWNLOAD = "beeboop. Remembering to clean this %s download up later."
 ADD_COMPLETED = "Beeped the new torrent."

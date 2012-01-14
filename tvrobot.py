@@ -88,6 +88,9 @@ class TvRobot:
         o.add_option("-a", "--add-torrent", action="store", default=None, dest="add_torrent",
         help="Adds the specified torrent and exits.")
 
+        o.add_option("-m", "--add-magnet", action="store", default=None, dest="add_magnet",
+        help="Adds the specified magnet URI and exits.")
+
         o.add_option("-t", "--torrent-type", action="store", default="Episode", dest="add_torrent_type", choices=("Movie", "Episode", "Series", "Season", "Set"),
         help="Specify the type of torrent to add.")
 
@@ -221,6 +224,26 @@ class TvRobot:
 
         print strings.ADD_COMPLETED
 
+    def add_magnet(self):
+        print strings.ADDING_MAGNET
+        torrent = self.daemon.add_uri(self.options.add_magnet)
+
+        print strings.ADDING_DOWNLOAD % self.options.add_torrent_type
+        guid = uuid.uuid4()
+        query = """
+            INSERT INTO Download
+            (guid, transmission_id, type)
+            VALUES
+            (%(guid)s, %(transmission_id)s, %(type)s)
+        """
+        DatabaseManager().execute_query_and_close(query, {
+            "guid": guid, 
+            "transmission_id": torrent.keys()[0], 
+            "type": self.options.add_torrent_type
+        })
+
+        print strings.ADD_COMPLETED
+
     def clean_torrents(self):
         torrents = self.daemon.list()
         print "I'm gonna try to beep these torrents: %s" % torrents
@@ -269,5 +292,7 @@ if __name__ == '__main__':
     robot = TvRobot()
     if robot.options.add_torrent is not None:
         robot.add_torrent()
+    if robot.options.add_magnet is not None:
+        robot.add_magnet()
     else:
         robot.clean_torrents()
