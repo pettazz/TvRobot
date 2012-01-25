@@ -82,6 +82,9 @@ class TvRobot:
         o.add_option("-c", "--clean-only", action="store_true", dest="clean_only", 
         help="Cleans up any already completed torrents and exits. Does not search for or add any torrents.")
 
+        o.add_option("-i", "--clean-id", action="store_true", dest="clean_id", 
+        help="Cleans up a specific Transmission download id and then stops.")
+
         o.add_option("-s", "--search-only", action="store_true", dest="search_only", 
         help="Searches for and adds any scheduled Episodes or Movies and exits. Does not clean up finished torrents.")
 
@@ -99,23 +102,27 @@ class TvRobot:
     def __get_video_file_path(self, files):
         max_size = 0
         file_id = None
+        decompress = False
         for torrent_id in files:
             print strings.FINDING_VIDEO_FILE % torrent_id
             for f in files[torrent_id]:
                 ext = files[torrent_id][f]['name'].rsplit('.', 1)[1]
-                if ext in config.FILETYPES['video'] and \
-                    files[torrent_id][f]['size'] > max_size:
+                if ext in config.FILETYPES['video'] and files[torrent_id][f]['size'] > max_size:
+                    decompress = False
                     max_size = files[torrent_id][f]['size']
                     file_name = files[torrent_id][f]['name']
-                elif ext in config.FILETYPES['compressed']:
+                elif ext in config.FILETYPES['compressed'] and files[torrent_id][f]['size'] > max_size::
                     #uggggggh
                     if ext == 'zip':
                         return None
                     elif ext == 'rar':
-                        print strings.UNRAR
-                        return self.__unrar_file(files[torrent_id][f]['name'])
+                        decompress = True
+                        max_size = files[torrent_id][f]['size']
+                        file_name = files[torrent_id][f]['name']
                     else:
-                        return None       
+                        return None    
+        if decompress:
+            file_name = self.__unrar_file(file_name)
         return file_name
 
     def __get_all_video_file_paths(self, files, kill_samples = True):
@@ -148,10 +155,13 @@ class TvRobot:
         return result
             
     def __unrar_file(self, file_path):
+        print strings.UNRAR
         guid = str(uuid.uuid4().hex)
         if config.TVROBOT['completed_move_method'] == 'FABRIC':
+            # local_path = "%s/%s" % (self.daemon.get_session().download_dir, file_path)
             local_path = self.__shellquote("%s/%s" % (self.daemon.get_session().download_dir, file_path))
             path_to = file_path.rsplit('/', 1)[0]
+            # remote_path = "%s/%s/" % (self.daemon.get_session().download_dir, guid)
             remote_path = self.__shellquote("%s/%s/" % (self.daemon.get_session().download_dir, guid))
             try:
                 subprocess.check_call("fab unrar_file:rar_path=%s,save_path=%s" % (local_path, remote_path),
@@ -170,7 +180,7 @@ class TvRobot:
             file_path = self.__shellquote(file_path)
             try:
                 #this isnt a check_call because a lot can go wrong here and its not mission critical
-                subprocess.call("fab delete_file:remote_path=%s" % (file_path),
+                subprocess.call("fab delete_file:remote_path='%s'" % (file_path),
                     stdout=open("%s/log_fabfileOutput.txt" % (config.TVROBOT['log_path']), "a"),
                     stderr=open("%s/log_fabfileError.txt" % (config.TVROBOT['log_path']), "a"),
                     shell=True)
@@ -183,10 +193,12 @@ class TvRobot:
     def __move_video_file(self, file_path, file_type):
         if config.TVROBOT['completed_move_method'] == 'FABRIC':
             video_name = file_path.rsplit('/', 1)[1]
+            # local_path = file_path
             local_path = self.__shellquote(file_path)
+            # remote_path = config.MEDIA['remote_path'][file_type]
             remote_path = self.__shellquote(config.MEDIA['remote_path'][file_type])
             try:
-                subprocess.check_call("fab move_video:local_path='%s',remote_path='%s'" % (local_path, remote_path),
+                subprocess.check_call("fab move_video:local_path=\"%s\",remote_path=\"%s\"" % (local_path, remote_path),
                     stdout=open("%s/log_fabfileOutput.txt" % (config.TVROBOT['log_path']), "a"),
                     stderr=open("%s/log_fabfileError.txt" % (config.TVROBOT['log_path']), "a"),
                     shell=True)
@@ -245,6 +257,10 @@ class TvRobot:
         print strings.ADD_COMPLETED
 
     def clean_torrents(self):
+        print "NOT YET"
+        pass
+
+    def clean_all_torrents(self):
         torrents = self.daemon.list()
         print "I'm gonna try to beep these torrents: %s" % torrents
         for num in torrents:
@@ -292,7 +308,9 @@ if __name__ == '__main__':
     robot = TvRobot()
     if robot.options.add_torrent is not None:
         robot.add_torrent()
-    if robot.options.add_magnet is not None:
+    elif robot.options.add_magnet is not None:
         robot.add_magnet()
-    else:
+    elif robot.options.clean_id is not None:
         robot.clean_torrents()
+    else:
+        robot.clean_all_torrents()
