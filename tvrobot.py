@@ -111,7 +111,7 @@ class TvRobot:
                     decompress = False
                     max_size = files[torrent_id][f]['size']
                     file_name = files[torrent_id][f]['name']
-                elif ext in config.FILETYPES['compressed'] and files[torrent_id][f]['size'] > max_size::
+                elif ext in config.FILETYPES['compressed'] and files[torrent_id][f]['size'] > max_size:
                     #uggggggh
                     if ext == 'zip':
                         return None
