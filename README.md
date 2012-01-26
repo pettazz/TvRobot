@@ -1,14 +1,14 @@
-Installation
+# Installation
 
 You don't. Yet.
 For now, clone the repo, set up your core/config.py, then do a
-sudo pip install -r requirements.pip 
+```sudo pip install -r requirements.pip ```
 and then 
-python tvrobot.py --help
+```python tvrobot.py --help```
 will guide you.
 
 
-TV ROBOT CAN GET YOUR TV AND MOVIES BECAUSE FUCK YEAH!
+# TV ROBOT CAN GET YOUR TV AND MOVIES BECAUSE FUCK YEAH!
 
 Options:
   -h, --help            show this help message and exit
