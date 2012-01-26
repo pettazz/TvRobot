@@ -1,16 +1,17 @@
 # Installation
 
-You don't. Yet.
-For now, clone the repo, set up your core/config.py, then do a
-```sudo pip install -r requirements.pip ```
-and then 
-```python tvrobot.py --help```
-will guide you.
+You don't. Yet.  
+For now, clone the repo, set up your core/config.py, then do a  
+```sudo pip install -r requirements.pip ```  
+and then  
+```python tvrobot.py --help```  
+will guide you.  
 
 
 # TV ROBOT CAN GET YOUR TV AND MOVIES BECAUSE FUCK YEAH!
 
-Options:
+Options:  
+```
   -h, --help            show this help message and exit
   -c, --clean-only      Cleans up any already completed downloads and exits.
                         Does not search for or add any torrents.
@@ -27,3 +28,4 @@ Options:
   -t ADD_TORRENT_TYPE, --torrent-type=ADD_TORRENT_TYPE
                         Specify the type of torrent to add. One of: Movie,
                         Episode (TV), Series (TV), Season (TV), Set(Movies)
+```
