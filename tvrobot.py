@@ -278,8 +278,15 @@ class TvRobot:
     def __shellquote(self, s):
         return s.replace(' ', '\ ').replace('(', '\(').replace(')', '\)').replace("'", "\\'").replace('&', '\&').replace(',', '\,').replace('!', '\!')
 
-    def __hash_password(self, password):
-        return hashlib.sha512(password + str(uuid.uuid4().hex)).hexdigest()
+    def __compare_passwords(self, given_password, existing_hash):
+        salt = existing_hash.split('$')[0]
+        hashed_password = self.__hash_password(given_password, salt)
+        return hashed_password == existing_hash
+
+    def __hash_password(self, password, salt=None):
+        if salt is None:
+            salt = str(uuid.uuid4().hex)
+        return "%s$%s" % (salt, hashlib.sha512(password + salt).hexdigest())
 
 
     ##############################

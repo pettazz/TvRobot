@@ -7,6 +7,7 @@ import core.config as config
 env.hosts = [config.TRANSMISSION['SSH']['user'] + '@' + \
              config.TRANSMISSION['server'] + ':' + \
              str(config.TRANSMISSION['SSH']['port'])]
+env.password = config.TRANSMISSION['SSH']['password']
 
 def move_video(local_path, remote_path):
     # local_path = __shellquote(local_path)

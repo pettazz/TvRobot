@@ -21,6 +21,7 @@ TRANSMISSION = {
 	'SSH': {
 		'port': 22,
 		'user': 'shamwow',
+		'password': 'mathematical'
 	}
 }
 

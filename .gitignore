@@ -3,3 +3,7 @@ logs/
 selenium-server.jar
 .DS_Store
 core/config.py
+
+src/pygooglevoice/
+
+src/pip-delete-this-directory.txt
