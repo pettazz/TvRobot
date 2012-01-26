@@ -35,23 +35,28 @@ class DatabaseManager():
 
     def fetchall_query_and_close(self,query,values):
         """Executes a query, gets all the values and then closes up the connection"""
-        self.cursor.execute(query,values)
+        self.cursor.execute(query, self.__sanitize(values))
         retval = self.cursor.fetchall()
         self.__close_db()
         return retval
 
     def fetchone_query_and_close(self,query,values):
         """Executes a query, gets the first value and then closes up the connection"""
-        self.cursor.execute(query,values)
+        self.cursor.execute(query, self.__sanitize(values))
         retval = self.cursor.fetchone()
         self.__close_db()
         return retval
 
     def execute_query_and_close(self, query, values):
         """Executes a query and closes the connection"""
-        retval = self.cursor.execute(query, values)
+        retval = self.cursor.execute(query, self.__sanitize(values))
         self.__close_db()
         return retval
+
+    def __sanitize(self, values):
+        retval = {}
+        for val in values:
+            retval[self.conn.escape_string(val)] = self.conn.escape_string(values[val])
 
     def __close_db(self):
         self.cursor.close()
