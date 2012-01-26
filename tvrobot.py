@@ -17,6 +17,8 @@ from core.google_voice_manager import GoogleVoiceManager
 import core.strings as strings
 import core.config as config
 from core.mysql import DatabaseManager
+from core.lock_manager import LockManager
+from core.user_manager import UserManager
 
 class TvRobot:
 
@@ -182,23 +184,14 @@ class TvRobot:
         
     def __add_subscription(self, download_guid):
         guid = uuid.uuid4()
-        user_name = getpass.getuser()
-        query = """
-            SELECT id FROM User WHERE
-            username = %(user_name)s
-        """
-        result = DatabaseManager().fetchone_query_and_close(query, {'user_name': user_name})
-        if result is not None:
-            user_id = result[0]
-        #else:
-            #ask for username and get that instead
+        user_id = UserManager().get_user_id()
         query = """
             INSERT INTO Subscription
             (guid, User, Download)
             VALUES
             (%(guid)s, %(user_id)s, %(download_guid)s)
         """
-        DatabaseManager().fetchone_query_and_close(query, {'guid': guid, 'user_id': user_id, 'download_guid': download_guid})
+        return DatabaseManager().execute_query_and_close(query, {'guid': guid, 'user_id': user_id, 'download_guid': download_guid})
 
     def __unrar_file(self, file_path):
         print strings.UNRAR
@@ -336,47 +329,54 @@ class TvRobot:
         print strings.ADD_COMPLETED
 
     def clean_torrent(self, torrent):
-        if torrent.status == 'seeding' or torrent.status == 'stopped':
-            video_type = self.__get_torrent_type(torrent.id)
-            if video_type in ('Episode', 'Movie'):
-                #single file 
-                video_file_name = self.__get_video_file_path(self.daemon.get_files(torrent.id))
-                if video_file_name is not None and video_type is not None:
-                    video_path = "%s/%s" % (self.daemon.get_session().download_dir, video_file_name)
-                    print strings.MOVING_VIDEO_FILE % (video_type, video_file_name)
-                    self.__move_video_file(video_path, video_type)
-
-                    #if this was a decompress created folder, we want to delete the whole thing
-                    #otherwise we can count on transmission to delete it properly
-                    if video_path.endswith('/*'):
-                        file_path = video_path[:-2]
-                        self.__delete_video_file(file_path)
-                    self.daemon.remove(torrent.id, delete_data = True)
-                    print strings.DOWNLOAD_CLEAN_COMPLETED
-                    if self.sms_enabled:
-                        self.__send_sms_completed(torrent)
-                else:
-                    print strings.UNSUPPORTED_FILE_TYPE % torrent.id 
-            elif video_type in ('Set', 'Season', 'Series'):
-                #some movies bro
-                video_files = self.__get_all_video_file_paths(self.daemon.get_files(torrent.id), kill_samples=("sample" not in torrent.name.lower()))
-                if video_files is not None and video_type is not None:
-                    for vidja in video_files:
-                        video_path = "%s/%s" % (self.daemon.get_session().download_dir, vidja)
-                        print strings.MOVING_VIDEO_FILE % (video_type, vidja)
+        lock_guid = LockManager().set_lock('clean')
+        try:
+            if torrent.status == 'seeding' or torrent.status == 'stopped':
+                video_type = self.__get_torrent_type(torrent.id)
+                if video_type in ('Episode', 'Movie'):
+                    #single file 
+                    video_file_name = self.__get_video_file_path(self.daemon.get_files(torrent.id))
+                    if video_file_name is not None and video_type is not None:
+                        video_path = "%s/%s" % (self.daemon.get_session().download_dir, video_file_name)
+                        print strings.MOVING_VIDEO_FILE % (video_type, video_file_name)
                         self.__move_video_file(video_path, video_type)
-                    self.daemon.remove(torrent.id, delete_data = True)
-                    print strings.DOWNLOAD_CLEAN_COMPLETED
-                    if self.sms_enabled:
-                        self.__send_sms_completed(torrent)
+
+                        #if this was a decompress created folder, we want to delete the whole thing
+                        #otherwise we can count on transmission to delete it properly
+                        if video_path.endswith('/*'):
+                            file_path = video_path[:-2]
+                            self.__delete_video_file(file_path)
+                        self.daemon.remove(torrent.id, delete_data = True)
+                        print strings.DOWNLOAD_CLEAN_COMPLETED
+                        if self.sms_enabled:
+                            self.__send_sms_completed(torrent)
+                    else:
+                        print strings.UNSUPPORTED_FILE_TYPE % torrent.id 
+                elif video_type in ('Set', 'Season', 'Series'):
+                    #some movies bro
+                    video_files = self.__get_all_video_file_paths(self.daemon.get_files(torrent.id), kill_samples=("sample" not in torrent.name.lower()))
+                    if video_files is not None and video_type is not None:
+                        for vidja in video_files:
+                            video_path = "%s/%s" % (self.daemon.get_session().download_dir, vidja)
+                            print strings.MOVING_VIDEO_FILE % (video_type, vidja)
+                            self.__move_video_file(video_path, video_type)
+                        self.daemon.remove(torrent.id, delete_data = True)
+                        print strings.DOWNLOAD_CLEAN_COMPLETED
+                        if self.sms_enabled:
+                            self.__send_sms_completed(torrent)
+                    else:
+                        print strings.UNSUPPORTED_FILE_TYPE % torrent.id 
+                elif video_type is not None:
+                    print strings.UNSUPPORTED_DOWNLOAD_TYPE % torrent.id 
                 else:
-                    print strings.UNSUPPORTED_FILE_TYPE % torrent.id 
-            elif video_type is not None:
-                print strings.UNSUPPORTED_DOWNLOAD_TYPE % torrent.id 
+                    print strings.UNRECOGNIZED_TORRENT % torrent.id 
             else:
-                print strings.UNRECOGNIZED_TORRENT % torrent.id 
-        else:
-            print strings.TORRENT_DOWNLOADING % torrent.id 
+                print strings.TORRENT_DOWNLOADING % torrent.id 
+        except Exception as e:
+            print "BEEEEEP. BROKEN."
+            print e
+        finally:
+            LockManager().unlock(lock_guid)
 
     def clean_torrents(self, ids=None):
         torrents = self.daemon.list()
