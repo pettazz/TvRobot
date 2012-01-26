@@ -6,11 +6,13 @@ import getpass
 import uuid
 import traceback
 import subprocess
+import hashlib
 
 from optparse import OptionParser, OptionValueError
 from selenium import webdriver
 import transmissionrpc 
 from core import selenium_launcher
+from core.google_voice_manager import GoogleVoiceManager
 
 import core.strings as strings
 import core.config as config
@@ -36,7 +38,7 @@ class TvRobot:
             os.mkdir(config.TVROBOT['log_path'])
 
         #start the selenium server if we need to and try to connect
-        if not (self.options.clean_only or (self.options.add_torrent is not None)):
+        if not (self.options.clean_only or (self.options.add_torrent is not None) or (self.options.clean_ids is not None)):
             if config.SELENIUM['server'] == "localhost":
                 selenium_launcher.execute_selenium(
                     config.SELENIUM['server'], 
@@ -56,6 +58,14 @@ class TvRobot:
                 raise Exception (
                 "Couldn't connect to the selenium server at %s after %s seconds." % 
                 (config.SELENIUM['server'], config.SELENIUM['timeout']))
+
+        #enable the google voice manager
+        try:
+            self.voice = GoogleVoiceManager()
+            self.sms_enabled = True
+        except:
+            print strings.GOOGLE_VOICE_ERROR_CONNECT
+            self.sms_enabled = False
 
         #try to connect to the Transmission server
         self.daemon = transmissionrpc.Client(
@@ -80,22 +90,22 @@ class TvRobot:
 
         o = OptionParser(usage=usage, description=desc)
         o.add_option("-c", "--clean-only", action="store_true", dest="clean_only", 
-        help="Cleans up any already completed torrents and exits. Does not search for or add any torrents.")
+        help="Cleans up any already completed downloads and exits. Does not search for or add any torrents.")
 
-        o.add_option("-i", "--clean-id", action="store_true", dest="clean_id", 
-        help="Cleans up a specific Transmission download id and then stops.")
+        o.add_option("-i", "--clean-ids", action="store", type="string", dest="clean_ids", 
+        help="Cleans up specific Transmission download ids and then stops. Comma separated list.")
 
         o.add_option("-s", "--search-only", action="store_true", dest="search_only", 
         help="Searches for and adds any scheduled Episodes or Movies and exits. Does not clean up finished torrents.")
 
         o.add_option("-a", "--add-torrent", action="store", default=None, dest="add_torrent",
-        help="Adds the specified torrent and exits.")
+        help="Adds the specified torrent file and exits.")
 
         o.add_option("-m", "--add-magnet", action="store", default=None, dest="add_magnet",
-        help="Adds the specified magnet URI and exits.")
+        help="Adds the specified magnet URI and exits. This will usually have to be in quotes.")
 
         o.add_option("-t", "--torrent-type", action="store", default="Episode", dest="add_torrent_type", choices=("Movie", "Episode", "Series", "Season", "Set"),
-        help="Specify the type of torrent to add.")
+        help="Specify the type of torrent to add. One of: Movie, Episode (TV), Series (TV), Season (TV), Set(Movies)")
 
         return o
 
@@ -112,17 +122,20 @@ class TvRobot:
                     max_size = files[torrent_id][f]['size']
                     file_name = files[torrent_id][f]['name']
                 elif ext in config.FILETYPES['compressed'] and files[torrent_id][f]['size'] > max_size:
-                    #uggggggh
                     if ext == 'zip':
-                        return None
+                        decompress = 'zip'
+                        max_size = files[torrent_id][f]['size']
+                        file_name = files[torrent_id][f]['name']
                     elif ext == 'rar':
-                        decompress = True
+                        decompress = 'rar'
                         max_size = files[torrent_id][f]['size']
                         file_name = files[torrent_id][f]['name']
                     else:
                         return None    
-        if decompress:
+        if decompress == 'rar':
             file_name = self.__unrar_file(file_name)
+        if decompress == 'zip':
+            file_name = self.__unzip_file(file_name)
         return file_name
 
     def __get_all_video_file_paths(self, files, kill_samples = True):
@@ -154,6 +167,39 @@ class TvRobot:
             result = result[0]
         return result
             
+    def __send_sms_completed(self, torrent):
+        query = """
+            SELECT U.phone FROM User U, Download D, Subscription S WHERE
+            D.transmission_id = %(torrent_id)s AND
+            S.Download = D.guid AND
+            U.id = S.User
+        """
+        result = DatabaseManager().fetchone_query_and_close(query, {'torrent_id': torrent.id})
+        if result is not None:
+            phone = result[0]
+            #TODO: when we have tracking of movies and tv shows, this is where to change the name sent in the sms
+            GoogleVoiceManager().send_message(phone, "BEEP. File's done: %s" % torrent.name)
+        
+    def __add_subscription(self, download_guid):
+        guid = uuid.uuid4()
+        user_name = getpass.getuser()
+        query = """
+            SELECT id FROM User WHERE
+            username = %(user_name)s
+        """
+        result = DatabaseManager().fetchone_query_and_close(query, {'user_name': user_name})
+        if result is not None:
+            user_id = result[0]
+        #else:
+            #ask for username and get that instead
+        query = """
+            INSERT INTO Subscription
+            (guid, User, Download)
+            VALUES
+            (%(guid)s, %(user_id)s, %(download_guid)s)
+        """
+        DatabaseManager().fetchone_query_and_close(query, {'guid': guid, 'user_id': user_id, 'download_guid': download_guid})
+
     def __unrar_file(self, file_path):
         print strings.UNRAR
         guid = str(uuid.uuid4().hex)
@@ -165,6 +211,27 @@ class TvRobot:
             remote_path = self.__shellquote("%s/%s/" % (self.daemon.get_session().download_dir, guid))
             try:
                 subprocess.check_call("fab unrar_file:rar_path=%s,save_path=%s" % (local_path, remote_path),
+                    stdout=open("%s/log_fabfileOutput.txt" % (config.TVROBOT['log_path']), "a"),
+                    stderr=open("%s/log_fabfileError.txt" % (config.TVROBOT['log_path']), "a"),
+                    shell=True)
+            except Exception, e:
+                print strings.CAUGHT_EXCEPTION
+                raise e
+        else: #config.TVROBOT['completed_move_method'] == 'LOCAL':
+            pass    
+        return "%s/*" % guid 
+            
+    def __unzip_file(self, file_path):
+        print strings.UNZIP
+        guid = str(uuid.uuid4().hex)
+        if config.TVROBOT['completed_move_method'] == 'FABRIC':
+            # local_path = "%s/%s" % (self.daemon.get_session().download_dir, file_path)
+            local_path = self.__shellquote("%s/%s" % (self.daemon.get_session().download_dir, file_path))
+            path_to = file_path.rsplit('/', 1)[0]
+            # remote_path = "%s/%s/" % (self.daemon.get_session().download_dir, guid)
+            remote_path = self.__shellquote("%s/%s/" % (self.daemon.get_session().download_dir, guid))
+            try:
+                subprocess.check_call("fab unzip_file:zip_path=%s,save_path=%s" % (local_path, remote_path),
                     stdout=open("%s/log_fabfileOutput.txt" % (config.TVROBOT['log_path']), "a"),
                     stderr=open("%s/log_fabfileError.txt" % (config.TVROBOT['log_path']), "a"),
                     shell=True)
@@ -211,6 +278,9 @@ class TvRobot:
     def __shellquote(self, s):
         return s.replace(' ', '\ ').replace('(', '\(').replace(')', '\)').replace("'", "\\'").replace('&', '\&').replace(',', '\,').replace('!', '\!')
 
+    def __hash_password(self, password):
+        return hashlib.sha512(password + str(uuid.uuid4().hex)).hexdigest()
+
 
     ##############################
     # public methods
@@ -234,6 +304,7 @@ class TvRobot:
             "type": self.options.add_torrent_type
         })
 
+        self.__add_subscription(guid)
         print strings.ADD_COMPLETED
 
     def add_magnet(self):
@@ -254,53 +325,62 @@ class TvRobot:
             "type": self.options.add_torrent_type
         })
 
+        self.__add_subscription(guid)
         print strings.ADD_COMPLETED
 
-    def clean_torrents(self):
-        print "NOT YET"
-        pass
+    def clean_torrent(self, torrent):
+        if torrent.status == 'seeding' or torrent.status == 'stopped':
+            video_type = self.__get_torrent_type(torrent.id)
+            if video_type in ('Episode', 'Movie'):
+                #single file 
+                video_file_name = self.__get_video_file_path(self.daemon.get_files(torrent.id))
+                if video_file_name is not None and video_type is not None:
+                    video_path = "%s/%s" % (self.daemon.get_session().download_dir, video_file_name)
+                    print strings.MOVING_VIDEO_FILE % (video_type, video_file_name)
+                    self.__move_video_file(video_path, video_type)
 
-    def clean_all_torrents(self):
-        torrents = self.daemon.list()
-        print "I'm gonna try to beep these torrents: %s" % torrents
-        for num in torrents:
-            if torrents[num].status == 'seeding' or torrents[num].status == 'stopped':
-                video_type = self.__get_torrent_type(num)
-                if video_type in ('Episode', 'Movie'):
-                    #single file 
-                    video_file_name = self.__get_video_file_path(self.daemon.get_files(num))
-                    if video_file_name is not None and video_type is not None:
-                        video_path = "%s/%s" % (self.daemon.get_session().download_dir, video_file_name)
-                        print strings.MOVING_VIDEO_FILE % (video_type, video_file_name)
-                        self.__move_video_file(video_path, video_type)
-
-                        #if this was a rar created folder, we want to delete the whole thing
-                        #otherwise we can count on transmission to delete it properly
-                        if video_path.endswith('/*'):
-                            file_path = video_path[:-2]
-                            self.__delete_video_file(file_path)
-                        self.daemon.remove(num, delete_data = True)
-                        print strings.DOWNLOAD_CLEAN_COMPLETED
-                    else:
-                        print strings.UNSUPPORTED_FILE_TYPE % num 
-                elif video_type in ('Set', 'Season', 'Series'):
-                    #some movies bro
-                    video_files = self.__get_all_video_file_paths(self.daemon.get_files(num), kill_samples=("sample" not in torrents[num].name.lower()))
-                    if video_files is not None and video_type is not None:
-                        for vidja in video_files:
-                            video_path = "%s/%s" % (self.daemon.get_session().download_dir, vidja)
-                            print strings.MOVING_VIDEO_FILE % (video_type, vidja)
-                            self.__move_video_file(video_path, video_type)
-                        self.daemon.remove(num, delete_data = True)
-                        print strings.DOWNLOAD_CLEAN_COMPLETED
-                    else:
-                        print strings.UNSUPPORTED_FILE_TYPE % num 
-                elif video_type is not None:
-                    print strings.UNSUPPORTED_DOWNLOAD_TYPE % num 
+                    #if this was a decompress created folder, we want to delete the whole thing
+                    #otherwise we can count on transmission to delete it properly
+                    if video_path.endswith('/*'):
+                        file_path = video_path[:-2]
+                        self.__delete_video_file(file_path)
+                    self.daemon.remove(torrent.id, delete_data = True)
+                    print strings.DOWNLOAD_CLEAN_COMPLETED
+                    if self.sms_enabled:
+                        self.__send_sms_completed(torrent)
                 else:
-                    print strings.UNRECOGNIZED_TORRENT % num 
+                    print strings.UNSUPPORTED_FILE_TYPE % torrent.id 
+            elif video_type in ('Set', 'Season', 'Series'):
+                #some movies bro
+                video_files = self.__get_all_video_file_paths(self.daemon.get_files(torrent.id), kill_samples=("sample" not in torrent.name.lower()))
+                if video_files is not None and video_type is not None:
+                    for vidja in video_files:
+                        video_path = "%s/%s" % (self.daemon.get_session().download_dir, vidja)
+                        print strings.MOVING_VIDEO_FILE % (video_type, vidja)
+                        self.__move_video_file(video_path, video_type)
+                    self.daemon.remove(torrent.id, delete_data = True)
+                    print strings.DOWNLOAD_CLEAN_COMPLETED
+                    if self.sms_enabled:
+                        self.__send_sms_completed(torrent)
+                else:
+                    print strings.UNSUPPORTED_FILE_TYPE % torrent.id 
+            elif video_type is not None:
+                print strings.UNSUPPORTED_DOWNLOAD_TYPE % torrent.id 
             else:
-                print strings.TORRENT_DOWNLOADING % num 
+                print strings.UNRECOGNIZED_TORRENT % torrent.id 
+        else:
+            print strings.TORRENT_DOWNLOADING % torrent.id 
+
+    def clean_torrents(self, ids=None):
+        torrents = self.daemon.list()
+        if ids is not None:
+            torrents = [torrents[num] for num in torrents if str(num) in ids]
+        else:
+            torrents = [torrents[num] for num in torrents]
+        print "I'm gonna try to beep these torrents: %s" % torrents
+        for torrent in torrents:
+            self.clean_torrent(torrent)
+
 
 
 #LETS DO THIS SHIT
@@ -310,7 +390,8 @@ if __name__ == '__main__':
         robot.add_torrent()
     elif robot.options.add_magnet is not None:
         robot.add_magnet()
-    elif robot.options.clean_id is not None:
-        robot.clean_torrents()
+    elif robot.options.clean_ids is not None:
+        ids = [x.strip() for x in robot.options.clean_ids.split(',')]
+        robot.clean_torrents(ids)
     else:
-        robot.clean_all_torrents()
+        robot.clean_torrents()

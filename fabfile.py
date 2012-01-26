@@ -26,6 +26,13 @@ def unrar_file(rar_path, save_path):
     run("mkdir %s" % save_path)
     run("unrar e %s %s" % (rar_path, save_path))
 
+def unzip_file(zip_path, save_path):
+    zip_path = __shellquote(zip_path)
+    save_path = __shellquote(save_path)
+
+    run("mkdir %s" % save_path)
+    run("unzip %s -d %s" % (zip_path, save_path))
+
 def delete_file(remote_path):
     remote_path = __shellquote(remote_path)
 

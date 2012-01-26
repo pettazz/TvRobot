@@ -30,6 +30,27 @@ UNRAR = """
                                             /"      "|
                                                 """
 
+UNZIP = """
+    <->      <=>
+     <=>    <->
+      <->  <=>
+       <=><->
+       <-><=>
+        ;--;
+        |  |
+        |  |
+        |LI|    I'MMA UNZIP DIS BITCH
+        \__/
+        <=->
+        <-=>
+        <=->
+        <-=>
+        <=->
+        <-=>
+        <=->
+        <-=>
+"""
+
 HELLO = "Sup everybody. I'm a friendly TvRobot. Beep and whatnot."
 
 KILL_CAUGHT = "But I was just getting started. Okay fine, I'll stop."
@@ -50,3 +71,5 @@ ADDING_TORRENT = "beep beep. Starting to download this torrent."
 ADDING_MAGNET = "bzzzzzeeeeep Adding this magnet before it kills me."
 ADDING_DOWNLOAD = "beeboop. Remembering to clean this %s download up later."
 ADD_COMPLETED = "Beeped the new torrent."
+
+GOOGLE_VOICE_ERROR_CONNECT = "Ruh roh, couldn't get my textmachine started, so I won't be able to send messages."

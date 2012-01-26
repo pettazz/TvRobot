@@ -7,6 +7,12 @@ TVROBOT = {
 	'completed_move_method': 'FABRIC'
 }
 
+GOOGLE_VOICE = {
+	'username': 'tehGoogol',
+	'password': 'aaaaaaaa',
+	
+}
+
 TRANSMISSION = {
 	'server': 'mytransmissionserver.org',
 	'port': 9091,

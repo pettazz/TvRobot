@@ -1,6 +1,7 @@
 MySQL_python
 pycrypto
 fabric
-selenium
-transmissionrpc
---editable .
+BeautifulSoup
+selenium==2.15
+transmissionrpc==0.8.0
+--editable git+git://github.com/pettazz/pygooglevoice.git#egg=pygooglevoice
