@@ -207,7 +207,7 @@ class TvRobot:
                 subprocess.check_call("fab unrar_file:rar_path=%s,save_path=%s" % (local_path, remote_path),
                     stdout=open("%s/log_fabfileOutput.txt" % (config.TVROBOT['log_path']), "a"),
                     stderr=open("%s/log_fabfileError.txt" % (config.TVROBOT['log_path']), "a"),
-                    shell=True)
+                    shell=True, executable='/bin/bash')
             except Exception, e:
                 print strings.CAUGHT_EXCEPTION
                 raise e
@@ -228,7 +228,7 @@ class TvRobot:
                 subprocess.check_call("fab unzip_file:zip_path=%s,save_path=%s" % (local_path, remote_path),
                     stdout=open("%s/log_fabfileOutput.txt" % (config.TVROBOT['log_path']), "a"),
                     stderr=open("%s/log_fabfileError.txt" % (config.TVROBOT['log_path']), "a"),
-                    shell=True)
+                    shell=True, executable='/bin/bash')
             except Exception, e:
                 print strings.CAUGHT_EXCEPTION
                 raise e
@@ -244,7 +244,7 @@ class TvRobot:
                 subprocess.call("fab delete_file:remote_path='%s'" % (file_path),
                     stdout=open("%s/log_fabfileOutput.txt" % (config.TVROBOT['log_path']), "a"),
                     stderr=open("%s/log_fabfileError.txt" % (config.TVROBOT['log_path']), "a"),
-                    shell=True)
+                    shell=True, executable='/bin/bash')
             except Exception, e:
                 print strings.CAUGHT_EXCEPTION
                 raise e
@@ -262,7 +262,7 @@ class TvRobot:
                 subprocess.check_call("fab move_video:local_path=\"%s\",remote_path=\"%s\"" % (local_path, remote_path),
                     stdout=open("%s/log_fabfileOutput.txt" % (config.TVROBOT['log_path']), "a"),
                     stderr=open("%s/log_fabfileError.txt" % (config.TVROBOT['log_path']), "a"),
-                    shell=True)
+                    shell=True, executable='/bin/bash')
             except Exception, e:
                 print strings.CAUGHT_EXCEPTION
                 raise e
