@@ -374,8 +374,6 @@ class TvRobot:
             else:
                 print strings.TORRENT_DOWNLOADING % torrent.id 
         finally:
-            print "go for it"
-            time.sleep(60)
             LockManager().unlock(lock_guid)
 
     def clean_torrents(self, ids=None):
