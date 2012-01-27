@@ -55,8 +55,13 @@ class DatabaseManager():
 
     def __sanitize(self, values):
         retval = {}
-        for val in values:
-            retval[self.conn.escape_string(val)] = self.conn.escape_string(values[val])
+        for key in values:
+            if type(values[key]) == str:
+                value = self.conn.escape_string(values[key])
+            else:
+                value = values[key]
+            retval[key] = value
+        return retval
 
     def __close_db(self):
         self.cursor.close()

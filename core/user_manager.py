@@ -25,6 +25,6 @@ class UserManager:
             if result is not None:
                 user_id = result[0]
             else:
-                raise("User does not exist.")
+                raise Exception("User does not exist.")
 
         return user_id

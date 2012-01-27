@@ -40,7 +40,7 @@ class TvRobot:
             os.mkdir(config.TVROBOT['log_path'])
 
         #start the selenium server if we need to and try to connect
-        if not (self.options.clean_only or (self.options.add_torrent is not None) or (self.options.clean_ids is not None)):
+        if not (self.options.clean_only or (self.options.add_torrent is not None) or (self.options.clean_ids is not None) or (self.options.add_magnet is not None)):
             if config.SELENIUM['server'] == "localhost":
                 selenium_launcher.execute_selenium(
                     config.SELENIUM['server'], 
@@ -81,6 +81,7 @@ class TvRobot:
     def __signal_catch_stop(self, signal, frame = None):
         """catch a ctrl-c and kill the program"""
         print strings.KILL_CAUGHT
+        LockManager().unlock()
         if hasattr(self, "driver"):
             self.driver.quit()
         os.kill(os.getpid(), 9) 
@@ -372,10 +373,9 @@ class TvRobot:
                     print strings.UNRECOGNIZED_TORRENT % torrent.id 
             else:
                 print strings.TORRENT_DOWNLOADING % torrent.id 
-        except Exception as e:
-            print "BEEEEEP. BROKEN."
-            print e
         finally:
+            print "go for it"
+            time.sleep(60)
             LockManager().unlock(lock_guid)
 
     def clean_torrents(self, ids=None):
