@@ -8,7 +8,10 @@ and then
 will guide you.  
 
 
+
 # TV ROBOT CAN GET YOUR TV AND MOVIES BECAUSE FUCK YEAH!
+
+![lol](http://i.imgur.com/C0aKB.gif "HATERS GONNA HATE")
 
 Options:  
 
