@@ -8,7 +8,7 @@ class LockManager:
 
 
     def is_locked(self, lock_type):
-        now = int(time.time())
+        now = int(time.time() * 1000)
         query = """
             SELECT guid FROM TaskLock WHERE
             type = %(lock_type)s AND
@@ -21,7 +21,7 @@ class LockManager:
         if self.is_locked(lock_type):
             raise Exception("Could not set %s lock, already locked." % lock_type)
         guid = uuid.uuid4()
-        now = int(time.time())
+        now = int(time.time() * 1000)
         if user_id is None:
             user_id = UserManager().get_user_id()
         query = """
@@ -37,7 +37,7 @@ class LockManager:
             raise Exception("Could not set %s lock." % lock_type)
     
     def unlock(self, lock_guid=None, user_id=None, lock_type=None):
-        now = int(time.time())
+        now = int(time.time() * 1000)
         if lock_guid is None:
             if user_id is None:
                 user_id = UserManager().get_user_id()
