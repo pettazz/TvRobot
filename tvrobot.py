@@ -204,7 +204,7 @@ class TvRobot:
             # remote_path = "%s/%s/" % (self.daemon.get_session().download_dir, guid)
             remote_path = self.__shellquote("%s/%s/" % (self.daemon.get_session().download_dir, guid))
             try:
-                subprocess.check_call("/bin/bash -c fab unrar_file:rar_path=%s,save_path=%s" % (local_path, remote_path),
+                subprocess.check_call("/bin/bash -c 'fab unrar_file:rar_path=%s,save_path=%s'" % (local_path, remote_path),
                     stdout=open("%s/log_fabfileOutput.txt" % (config.TVROBOT['log_path']), "a"),
                     stderr=open("%s/log_fabfileError.txt" % (config.TVROBOT['log_path']), "a"),
                     shell=True)
@@ -225,7 +225,7 @@ class TvRobot:
             # remote_path = "%s/%s/" % (self.daemon.get_session().download_dir, guid)
             remote_path = self.__shellquote("%s/%s/" % (self.daemon.get_session().download_dir, guid))
             try:
-                subprocess.check_call("f/bin/bash -c ab unzip_file:zip_path=%s,save_path=%s" % (local_path, remote_path),
+                subprocess.check_call("f/bin/bash -c 'fab unzip_file:zip_path=%s,save_path=%s'" % (local_path, remote_path),
                     stdout=open("%s/log_fabfileOutput.txt" % (config.TVROBOT['log_path']), "a"),
                     stderr=open("%s/log_fabfileError.txt" % (config.TVROBOT['log_path']), "a"),
                     shell=True)
@@ -241,7 +241,7 @@ class TvRobot:
             file_path = self.__shellquote(file_path)
             try:
                 #this isnt a check_call because a lot can go wrong here and its not mission critical
-                subprocess.call("/bin/bash -c fab delete_file:remote_path='%s'" % (file_path),
+                subprocess.call("/bin/bash -c 'fab delete_file:remote_path=\"%s\"'" % (file_path),
                     stdout=open("%s/log_fabfileOutput.txt" % (config.TVROBOT['log_path']), "a"),
                     stderr=open("%s/log_fabfileError.txt" % (config.TVROBOT['log_path']), "a"),
                     shell=True)
@@ -259,7 +259,7 @@ class TvRobot:
             # remote_path = config.MEDIA['remote_path'][file_type]
             remote_path = self.__shellquote(config.MEDIA['remote_path'][file_type])
             try:
-                subprocess.check_call("/bin/bash -c fab move_video:local_path=\"%s\",remote_path=\"%s\"" % (local_path, remote_path),
+                subprocess.check_call("/bin/bash -c 'fab move_video:local_path=\"%s\",remote_path=\"%s\"'" % (local_path, remote_path),
                     stdout=open("%s/log_fabfileOutput.txt" % (config.TVROBOT['log_path']), "a"),
                     stderr=open("%s/log_fabfileError.txt" % (config.TVROBOT['log_path']), "a"),
                     shell=True)
