@@ -330,61 +330,61 @@ class TvRobot:
         print strings.ADD_COMPLETED
 
     def clean_torrent(self, torrent):
-        lock_guid = LockManager().set_lock('clean')
-        try:
-            if torrent.status == 'seeding' or torrent.status == 'stopped':
-                video_type = self.__get_torrent_type(torrent.id)
-                if video_type in ('Episode', 'Movie'):
-                    #single file 
-                    video_file_name = self.__get_video_file_path(self.daemon.get_files(torrent.id))
-                    if video_file_name is not None and video_type is not None:
-                        video_path = "%s/%s" % (self.daemon.get_session().download_dir, video_file_name)
-                        print strings.MOVING_VIDEO_FILE % (video_type, video_file_name)
-                        self.__move_video_file(video_path, video_type)
+        if torrent.status == 'seeding' or torrent.status == 'stopped':
+            video_type = self.__get_torrent_type(torrent.id)
+            if video_type in ('Episode', 'Movie'):
+                #single file 
+                video_file_name = self.__get_video_file_path(self.daemon.get_files(torrent.id))
+                if video_file_name is not None and video_type is not None:
+                    video_path = "%s/%s" % (self.daemon.get_session().download_dir, video_file_name)
+                    print strings.MOVING_VIDEO_FILE % (video_type, video_file_name)
+                    self.__move_video_file(video_path, video_type)
 
-                        #if this was a decompress created folder, we want to delete the whole thing
-                        #otherwise we can count on transmission to delete it properly
-                        if video_path.endswith('/*'):
-                            file_path = video_path[:-2]
-                            self.__delete_video_file(file_path)
-                        self.daemon.remove(torrent.id, delete_data = True)
-                        print strings.DOWNLOAD_CLEAN_COMPLETED
-                        if self.sms_enabled:
-                            self.__send_sms_completed(torrent)
-                    else:
-                        print strings.UNSUPPORTED_FILE_TYPE % torrent.id 
-                elif video_type in ('Set', 'Season', 'Series'):
-                    #some movies bro
-                    video_files = self.__get_all_video_file_paths(self.daemon.get_files(torrent.id), kill_samples=("sample" not in torrent.name.lower()))
-                    if video_files is not None and video_type is not None:
-                        for vidja in video_files:
-                            video_path = "%s/%s" % (self.daemon.get_session().download_dir, vidja)
-                            print strings.MOVING_VIDEO_FILE % (video_type, vidja)
-                            self.__move_video_file(video_path, video_type)
-                        self.daemon.remove(torrent.id, delete_data = True)
-                        print strings.DOWNLOAD_CLEAN_COMPLETED
-                        if self.sms_enabled:
-                            self.__send_sms_completed(torrent)
-                    else:
-                        print strings.UNSUPPORTED_FILE_TYPE % torrent.id 
-                elif video_type is not None:
-                    print strings.UNSUPPORTED_DOWNLOAD_TYPE % torrent.id 
+                    #if this was a decompress created folder, we want to delete the whole thing
+                    #otherwise we can count on transmission to delete it properly
+                    if video_path.endswith('/*'):
+                        file_path = video_path[:-2]
+                        self.__delete_video_file(file_path)
+                    self.daemon.remove(torrent.id, delete_data = True)
+                    print strings.DOWNLOAD_CLEAN_COMPLETED
+                    if self.sms_enabled:
+                        self.__send_sms_completed(torrent)
                 else:
-                    print strings.UNRECOGNIZED_TORRENT % torrent.id 
+                    print strings.UNSUPPORTED_FILE_TYPE % torrent.id 
+            elif video_type in ('Set', 'Season', 'Series'):
+                #some movies bro
+                video_files = self.__get_all_video_file_paths(self.daemon.get_files(torrent.id), kill_samples=("sample" not in torrent.name.lower()))
+                if video_files is not None and video_type is not None:
+                    for vidja in video_files:
+                        video_path = "%s/%s" % (self.daemon.get_session().download_dir, vidja)
+                        print strings.MOVING_VIDEO_FILE % (video_type, vidja)
+                        self.__move_video_file(video_path, video_type)
+                    self.daemon.remove(torrent.id, delete_data = True)
+                    print strings.DOWNLOAD_CLEAN_COMPLETED
+                    if self.sms_enabled:
+                        self.__send_sms_completed(torrent)
+                else:
+                    print strings.UNSUPPORTED_FILE_TYPE % torrent.id 
+            elif video_type is not None:
+                print strings.UNSUPPORTED_DOWNLOAD_TYPE % torrent.id 
             else:
-                print strings.TORRENT_DOWNLOADING % torrent.id 
-        finally:
-            LockManager().unlock(lock_guid)
+                print strings.UNRECOGNIZED_TORRENT % torrent.id 
+        else:
+            print strings.TORRENT_DOWNLOADING % torrent.id 
 
     def clean_torrents(self, ids=None):
-        torrents = self.daemon.list()
-        if ids is not None:
-            torrents = [torrents[num] for num in torrents if str(num) in ids]
-        else:
-            torrents = [torrents[num] for num in torrents]
-        print "I'm gonna try to beep these torrents: %s" % torrents
-        for torrent in torrents:
-            self.clean_torrent(torrent)
+        lock_guid = LockManager().set_lock('clean')
+        try:
+            torrents = self.daemon.list()
+            if ids is not None:
+                torrents = [torrents[num] for num in torrents if str(num) in ids]
+            else:
+                torrents = [torrents[num] for num in torrents]
+            print "I'm gonna try to beep these torrents: %s" % torrents
+            for torrent in torrents:
+                self.clean_torrent(torrent)
+        finally:
+            LockManager().unlock(lock_guid)
 
 
 
