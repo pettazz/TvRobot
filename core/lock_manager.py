@@ -12,7 +12,6 @@ class LockManager:
         query = """
             SELECT guid FROM TaskLock WHERE
             type = %(lock_type)s AND
-            time_unlocked >= %(now)s OR
             time_unlocked = 0
         """
         result = DatabaseManager().fetchone_query_and_close(query, {'lock_type': lock_type, 'now': now})
