@@ -330,7 +330,7 @@ class TvRobot:
         print strings.ADD_COMPLETED
 
     def clean_torrent(self, torrent):
-        if torrent.status == 'seeding' or torrent.status == 'stopped':
+        if torrent.progress == 100:
             video_type = self.__get_torrent_type(torrent.id)
             if video_type in ('Episode', 'Movie'):
                 #single file 
