@@ -252,21 +252,25 @@ class TvRobot:
             pass     
 
     def __move_video_file(self, file_path, file_type):
-        if config.TVROBOT['completed_move_method'] == 'FABRIC':
-            video_name = file_path.rsplit('/', 1)[1]
-            # local_path = file_path
-            local_path = self.__shellquote(file_path)
-            # remote_path = config.MEDIA['remote_path'][file_type]
-            remote_path = self.__shellquote(config.MEDIA['remote_path'][file_type])
-            try:
-                subprocess.check_call("/bin/bash -c 'fab move_video:local_path=\"%s\",remote_path=\"%s\"'" % (local_path, remote_path),
-                    stdout=open("%s/log_fabfileOutput.txt" % (config.TVROBOT['log_path']), "a"),
-                    stderr=open("%s/log_fabfileError.txt" % (config.TVROBOT['log_path']), "a"),
-                    shell=True)
-            except Exception, e:
-                print strings.CAUGHT_EXCEPTION
-                raise e
-        else: #config.TVROBOT['completed_move_method'] == 'LOCAL':
+        if os.path.isfile(file_path):
+            if config.TVROBOT['completed_move_method'] == 'FABRIC':
+                video_name = file_path.rsplit('/', 1)[1]
+                # local_path = file_path
+                local_path = self.__shellquote(file_path)
+                # remote_path = config.MEDIA['remote_path'][file_type]
+                remote_path = self.__shellquote(config.MEDIA['remote_path'][file_type])
+                try:
+                    subprocess.check_call("/bin/bash -c 'fab move_video:local_path=\"%s\",remote_path=\"%s\"'" % (local_path, remote_path),
+                        stdout=open("%s/log_fabfileOutput.txt" % (config.TVROBOT['log_path']), "a"),
+                        stderr=open("%s/log_fabfileError.txt" % (config.TVROBOT['log_path']), "a"),
+                        shell=True)
+                except Exception, e:
+                    print strings.CAUGHT_EXCEPTION
+                    raise e
+            else: #config.TVROBOT['completed_move_method'] == 'LOCAL':
+                pass
+        else:
+            #looks like someone disabled this file from the download
             pass
 
     def __shellquote(self, s):
