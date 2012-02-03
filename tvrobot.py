@@ -147,7 +147,7 @@ class TvRobot:
             print strings.FINDING_VIDEO_FILE % torrent_id
             for f in files[torrent_id]:
                 ext = files[torrent_id][f]['name'].rsplit('.', 1)[1]
-                if ext in config.FILETYPES['video']:
+                if ext in config.FILETYPES['video'] and (files[torrent_id][f]['selected']):
                     if kill_samples:
                         if "sample" not in files[torrent_id][f]['name'].lower() and "trailer" not in files[torrent_id][f]['name'].lower():
                             videos.append(files[torrent_id][f]['name'])
@@ -204,7 +204,7 @@ class TvRobot:
             # remote_path = "%s/%s/" % (self.daemon.get_session().download_dir, guid)
             remote_path = self.__shellquote("%s/%s/" % (self.daemon.get_session().download_dir, guid))
             try:
-                subprocess.check_call("/bin/bash -c 'fab unrar_file:rar_path=%s,save_path=%s'" % (local_path, remote_path),
+                subprocess.check_call("fab unrar_file:rar_path=%s,save_path=%s" % (local_path, remote_path),
                     stdout=open("%s/log_fabfileOutput.txt" % (config.TVROBOT['log_path']), "a"),
                     stderr=open("%s/log_fabfileError.txt" % (config.TVROBOT['log_path']), "a"),
                     shell=True)
@@ -225,7 +225,7 @@ class TvRobot:
             # remote_path = "%s/%s/" % (self.daemon.get_session().download_dir, guid)
             remote_path = self.__shellquote("%s/%s/" % (self.daemon.get_session().download_dir, guid))
             try:
-                subprocess.check_call("f/bin/bash -c 'fab unzip_file:zip_path=%s,save_path=%s'" % (local_path, remote_path),
+                subprocess.check_call("fab unzip_file:zip_path=%s,save_path=%s" % (local_path, remote_path),
                     stdout=open("%s/log_fabfileOutput.txt" % (config.TVROBOT['log_path']), "a"),
                     stderr=open("%s/log_fabfileError.txt" % (config.TVROBOT['log_path']), "a"),
                     shell=True)
@@ -241,7 +241,7 @@ class TvRobot:
             file_path = self.__shellquote(file_path)
             try:
                 #this isnt a check_call because a lot can go wrong here and its not mission critical
-                subprocess.call("/bin/bash -c 'fab delete_file:remote_path=\"%s\"'" % (file_path),
+                subprocess.call("fab delete_file:remote_path=%s" % (file_path),
                     stdout=open("%s/log_fabfileOutput.txt" % (config.TVROBOT['log_path']), "a"),
                     stderr=open("%s/log_fabfileError.txt" % (config.TVROBOT['log_path']), "a"),
                     shell=True)
@@ -252,25 +252,21 @@ class TvRobot:
             pass     
 
     def __move_video_file(self, file_path, file_type):
-        if os.path.isfile(file_path):
-            if config.TVROBOT['completed_move_method'] == 'FABRIC':
-                video_name = file_path.rsplit('/', 1)[1]
-                # local_path = file_path
-                local_path = self.__shellquote(file_path)
-                # remote_path = config.MEDIA['remote_path'][file_type]
-                remote_path = self.__shellquote(config.MEDIA['remote_path'][file_type])
-                try:
-                    subprocess.check_call("/bin/bash -c 'fab move_video:local_path=\"%s\",remote_path=\"%s\"'" % (local_path, remote_path),
-                        stdout=open("%s/log_fabfileOutput.txt" % (config.TVROBOT['log_path']), "a"),
-                        stderr=open("%s/log_fabfileError.txt" % (config.TVROBOT['log_path']), "a"),
-                        shell=True)
-                except Exception, e:
-                    print strings.CAUGHT_EXCEPTION
-                    raise e
-            else: #config.TVROBOT['completed_move_method'] == 'LOCAL':
-                pass
-        else:
-            #looks like someone disabled this file from the download
+        if config.TVROBOT['completed_move_method'] == 'FABRIC':
+            video_name = file_path.rsplit('/', 1)[1]
+            # local_path = file_path
+            local_path = self.__shellquote(file_path)
+            # remote_path = config.MEDIA['remote_path'][file_type]
+            remote_path = self.__shellquote(config.MEDIA['remote_path'][file_type])
+            try:
+                subprocess.check_call("fab move_video:local_path=%s,remote_path=%s" % (local_path, remote_path),
+                    stdout=open("%s/log_fabfileOutput.txt" % (config.TVROBOT['log_path']), "a"),
+                    stderr=open("%s/log_fabfileError.txt" % (config.TVROBOT['log_path']), "a"),
+                    shell=True)
+            except Exception, e:
+                print strings.CAUGHT_EXCEPTION
+                raise e
+        else: #config.TVROBOT['completed_move_method'] == 'LOCAL':
             pass
 
     def __shellquote(self, s):
@@ -347,6 +343,7 @@ class TvRobot:
                     #if this was a decompress created folder, we want to delete the whole thing
                     #otherwise we can count on transmission to delete it properly
                     if video_path.endswith('/*'):
+                        print "DELETING GUID"
                         file_path = video_path[:-2]
                         self.__delete_video_file(file_path)
                     self.daemon.remove(torrent.id, delete_data = True)
