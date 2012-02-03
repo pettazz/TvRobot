@@ -10,8 +10,8 @@ env.hosts = [config.TRANSMISSION['SSH']['user'] + '@' + \
 env.password = config.TRANSMISSION['SSH']['password']
 
 def move_video(local_path, remote_path):
-    # local_path = __shellquote(local_path)
-    # remote_path = __shellquote(remote_path)
+    local_path = __shellquote(local_path)
+    remote_path = __shellquote(remote_path)
     cmd = "scp -P %s %s %s@%s:%s" % (
         config.MEDIA['port'],
         local_path,
