@@ -13,6 +13,7 @@ from selenium import webdriver
 import transmissionrpc 
 from core import selenium_launcher
 from core.google_voice_manager import GoogleVoiceManager
+from core.transmission_manager import TransmissionManager
 
 import core.strings as strings
 import core.config as config
@@ -68,13 +69,6 @@ class TvRobot:
         except:
             print strings.GOOGLE_VOICE_ERROR_CONNECT
             self.sms_enabled = False
-
-        #try to connect to the Transmission server
-        self.daemon = transmissionrpc.Client(
-            address=config.TRANSMISSION['server'], 
-            port=config.TRANSMISSION['port'], 
-            user=config.TRANSMISSION['user'], 
-            password=config.TRANSMISSION['password'])
         
         print strings.HELLO
 
@@ -198,11 +192,11 @@ class TvRobot:
         print strings.UNRAR
         guid = str(uuid.uuid4().hex)
         if config.TVROBOT['completed_move_method'] == 'FABRIC':
-            # local_path = "%s/%s" % (self.daemon.get_session().download_dir, file_path)
-            local_path = self.__shellquote("%s/%s" % (self.daemon.get_session().download_dir, file_path))
+            # local_path = "%s/%s" % (TransmissionManager().get_session().download_dir, file_path)
+            local_path = self.__shellquote("%s/%s" % (TransmissionManager().get_session().download_dir, file_path))
             path_to = file_path.rsplit('/', 1)[0]
-            # remote_path = "%s/%s/" % (self.daemon.get_session().download_dir, guid)
-            remote_path = self.__shellquote("%s/%s/" % (self.daemon.get_session().download_dir, guid))
+            # remote_path = "%s/%s/" % (TransmissionManager().get_session().download_dir, guid)
+            remote_path = self.__shellquote("%s/%s/" % (TransmissionManager().get_session().download_dir, guid))
             try:
                 subprocess.check_call("fab unrar_file:rar_path='%s',save_path='%s'" % (local_path, remote_path),
                     stdout=open("%s/log_fabfileOutput.txt" % (config.TVROBOT['log_path']), "a"),
@@ -219,11 +213,11 @@ class TvRobot:
         print strings.UNZIP
         guid = str(uuid.uuid4().hex)
         if config.TVROBOT['completed_move_method'] == 'FABRIC':
-            # local_path = "%s/%s" % (self.daemon.get_session().download_dir, file_path)
-            local_path = self.__shellquote("%s/%s" % (self.daemon.get_session().download_dir, file_path))
+            # local_path = "%s/%s" % (TransmissionManager().get_session().download_dir, file_path)
+            local_path = self.__shellquote("%s/%s" % (TransmissionManager().get_session().download_dir, file_path))
             path_to = file_path.rsplit('/', 1)[0]
-            # remote_path = "%s/%s/" % (self.daemon.get_session().download_dir, guid)
-            remote_path = self.__shellquote("%s/%s/" % (self.daemon.get_session().download_dir, guid))
+            # remote_path = "%s/%s/" % (TransmissionManager().get_session().download_dir, guid)
+            remote_path = self.__shellquote("%s/%s/" % (TransmissionManager().get_session().download_dir, guid))
             try:
                 subprocess.check_call("fab unzip_file:zip_path='%s',save_path='%s'" % (local_path, remote_path),
                     stdout=open("%s/log_fabfileOutput.txt" % (config.TVROBOT['log_path']), "a"),
@@ -238,10 +232,10 @@ class TvRobot:
             
     def __delete_video_file(self, file_path):
         if config.TVROBOT['completed_move_method'] == 'FABRIC':
-            file_path = self.__shellquote(file_path)
+            # file_path = self.__shellquote(file_path)
             try:
                 #this isnt a check_call because a lot can go wrong here and its not mission critical
-                subprocess.call("fab delete_file:remote_path=%s" % (file_path),
+                subprocess.call("fab delete_file:remote_path=\"%s\"" % (file_path),
                     stdout=open("%s/log_fabfileOutput.txt" % (config.TVROBOT['log_path']), "a"),
                     stderr=open("%s/log_fabfileError.txt" % (config.TVROBOT['log_path']), "a"),
                     shell=True)
@@ -254,12 +248,13 @@ class TvRobot:
     def __move_video_file(self, file_path, file_type):
         if config.TVROBOT['completed_move_method'] == 'FABRIC':
             video_name = file_path.rsplit('/', 1)[1]
-            # local_path = file_path
-            local_path = self.__shellquote(file_path)
-            # remote_path = config.MEDIA['remote_path'][file_type]
-            remote_path = self.__shellquote(config.MEDIA['remote_path'][file_type])
+            local_path = file_path
+            # local_path = self.__shellquote(file_path)
+            remote_path = config.MEDIA['remote_path'][file_type]
+            # remote_path = self.__shellquote(config.MEDIA['remote_path'][file_type])
             try:
-                subprocess.check_call("fab move_video:local_path='%s',remote_path='%s'" % (local_path, remote_path),
+                cmd = "fab move_video:local_path=\"%s\",remote_path=\"%s\"" % (local_path, remote_path)
+                subprocess.check_call(cmd,
                     stdout=open("%s/log_fabfileOutput.txt" % (config.TVROBOT['log_path']), "a"),
                     stderr=open("%s/log_fabfileError.txt" % (config.TVROBOT['log_path']), "a"),
                     shell=True)
@@ -289,7 +284,7 @@ class TvRobot:
     def add_torrent(self):
         print strings.ADDING_TORRENT 
         torrent_file = open(self.options.add_torrent, "rb").read().encode("base64")
-        torrent = self.daemon.add(torrent_file)
+        torrent = TransmissionManager().add(torrent_file)
 
         print strings.ADDING_DOWNLOAD % self.options.add_torrent_type
         guid = uuid.uuid4()
@@ -310,7 +305,7 @@ class TvRobot:
 
     def add_magnet(self):
         print strings.ADDING_MAGNET
-        torrent = self.daemon.add_uri(self.options.add_magnet)
+        torrent = TransmissionManager().add_uri(self.options.add_magnet)
 
         print strings.ADDING_DOWNLOAD % self.options.add_torrent_type
         guid = uuid.uuid4()
@@ -334,9 +329,9 @@ class TvRobot:
             video_type = self.__get_torrent_type(torrent.id)
             if video_type in ('Episode', 'Movie'):
                 #single file 
-                video_file_name = self.__get_video_file_path(self.daemon.get_files(torrent.id))
+                video_file_name = self.__get_video_file_path(TransmissionManager().get_files(torrent.id))
                 if video_file_name is not None and video_type is not None:
-                    video_path = "%s/%s" % (self.daemon.get_session().download_dir, video_file_name)
+                    video_path = "%s/%s" % (TransmissionManager().get_session().download_dir, video_file_name)
                     print strings.MOVING_VIDEO_FILE % (video_type, video_file_name)
                     self.__move_video_file(video_path, video_type)
 
@@ -346,7 +341,7 @@ class TvRobot:
                         print "DELETING GUID"
                         file_path = video_path[:-2]
                         self.__delete_video_file(file_path)
-                    self.daemon.remove(torrent.id, delete_data = True)
+                    TransmissionManager().remove(torrent.id, delete_data = True)
                     print strings.DOWNLOAD_CLEAN_COMPLETED
                     if self.sms_enabled:
                         self.__send_sms_completed(torrent)
@@ -354,13 +349,13 @@ class TvRobot:
                     print strings.UNSUPPORTED_FILE_TYPE % torrent.id 
             elif video_type in ('Set', 'Season', 'Series'):
                 #some movies bro
-                video_files = self.__get_all_video_file_paths(self.daemon.get_files(torrent.id), kill_samples=("sample" not in torrent.name.lower()))
+                video_files = self.__get_all_video_file_paths(TransmissionManager().get_files(torrent.id), kill_samples=("sample" not in torrent.name.lower()))
                 if video_files is not None and video_type is not None:
                     for vidja in video_files:
-                        video_path = "%s/%s" % (self.daemon.get_session().download_dir, vidja)
+                        video_path = "%s/%s" % (TransmissionManager().get_session().download_dir, vidja)
                         print strings.MOVING_VIDEO_FILE % (video_type, vidja)
                         self.__move_video_file(video_path, video_type)
-                    self.daemon.remove(torrent.id, delete_data = True)
+                    TransmissionManager().remove(torrent.id, delete_data = True)
                     print strings.DOWNLOAD_CLEAN_COMPLETED
                     if self.sms_enabled:
                         self.__send_sms_completed(torrent)
@@ -376,7 +371,7 @@ class TvRobot:
     def clean_torrents(self, ids=None):
         lock_guid = LockManager().set_lock('clean')
         try:
-            torrents = self.daemon.list()
+            torrents = TransmissionManager().list()
             if ids is not None:
                 torrents = [torrents[num] for num in torrents if str(num) in ids]
             else:
