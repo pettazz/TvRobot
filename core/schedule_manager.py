@@ -79,6 +79,16 @@ class ScheduleManager:
     def add_scheduled_episode(self, data):
         sdata = self.__get_show_data(data['name'])
         if sdata['tvrage_show_id'] is None:
+            # TODO: make a better way of handling cancelled shows. this is kinda stupid.
+            sdata['guid'] = uuid.uuid4()
+            sdata['sms_guid'] = data['sms_guid']
+            sdata['name'] = data['name']
+            query = """
+                INSERT INTO EpisodeSchedule
+                (guid, show_name, tvrage_show_id, duration, season_number, episode_number, timestamp, sms_guid)
+                VALUES (%(guid)s, %(name)s, '0', '0', '0', '0', '4294967295', %(sms_guid)s)
+            """
+            DatabaseManager().execute_query_and_close(query, sdata)
             return None
         else:
             sdata['guid'] = uuid.uuid4()
