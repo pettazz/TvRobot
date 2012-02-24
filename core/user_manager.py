@@ -28,3 +28,14 @@ class UserManager:
                 raise Exception("User does not exist.")
 
         return user_id
+
+    def get_user_id_by_phone(self, phone):
+        query = """
+            SELECT id FROM User WHERE
+            phone = %(phone)s
+        """
+        result = DatabaseManager().fetchone_query_and_close(query, {'phone': phone})
+        if result is not None:
+            return result[0]
+        else:
+            return None

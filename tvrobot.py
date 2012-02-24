@@ -20,6 +20,8 @@ import core.config as config
 from core.mysql import DatabaseManager
 from core.lock_manager import LockManager
 from core.user_manager import UserManager
+from core.schedule_manager import ScheduleManager
+from core.torrent_search_manager import TorrentSearchManager
 
 class TvRobot:
 
@@ -50,9 +52,10 @@ class TvRobot:
 
             for x in range(config.SELENIUM['timeout']):
                 try:
-                    self.driver = webdriver.Remote("http://%s:%s/wd/hub"%
-                        (config.SELENIUM['server'], config.SELENIUM['port']),
-                        webdriver.DesiredCapabilities.HTMLUNIT)
+                    # self.driver = webdriver.Remote("http://%s:%s/wd/hub"%
+                    #     (config.SELENIUM['server'], config.SELENIUM['port']),
+                    #     webdriver.DesiredCapabilities.FIREFOX)
+                    self.driver = webdriver.Firefox()
                     break
                 except:
                     time.sleep(1)
@@ -71,6 +74,9 @@ class TvRobot:
             self.sms_enabled = False
         
         print strings.HELLO
+
+    def __del__(self):
+        self.driver.quit()
 
     def __signal_catch_stop(self, signal, frame = None):
         """catch a ctrl-c and kill the program"""
@@ -166,27 +172,31 @@ class TvRobot:
             
     def __send_sms_completed(self, torrent):
         query = """
-            SELECT U.phone FROM User U, Download D, Subscription S WHERE
+            SELECT U.phone, S.name FROM User U, Download D, Subscription S WHERE
             D.transmission_id = %(torrent_id)s AND
             S.Download = D.guid AND
             U.id = S.User
         """
-        result = DatabaseManager().fetchone_query_and_close(query, {'torrent_id': torrent.id})
+        result = DatabaseManager().fetchall_query_and_close(query, {'torrent_id': torrent.id})
         if result is not None:
-            phone = result[0]
-            #TODO: when we have tracking of movies and tv shows, this is where to change the name sent in the sms
-            GoogleVoiceManager().send_message(phone, "BEEP. File's done: %s" % torrent.name)
+            for res in result:
+                phone = res[0]
+                if res[1] is not None:
+                    name = torrent.name
+                else:
+                    name = res[1]
+                GoogleVoiceManager().send_message(phone, "BEEP. File's done: %s" % name)
         
-    def __add_subscription(self, download_guid):
+    def __add_subscription(self, download_guid, name = ""):
         guid = uuid.uuid4()
         user_id = UserManager().get_user_id()
         query = """
             INSERT INTO Subscription
-            (guid, User, Download)
+            (guid, User, Download, name)
             VALUES
-            (%(guid)s, %(user_id)s, %(download_guid)s)
+            (%(guid)s, %(user_id)s, %(download_guid)s, %(name)s)
         """
-        return DatabaseManager().execute_query_and_close(query, {'guid': guid, 'user_id': user_id, 'download_guid': download_guid})
+        return DatabaseManager().execute_query_and_close(query, {'guid': guid, 'user_id': user_id, 'download_guid': download_guid, 'name': name})
 
     def __unrar_file(self, file_path):
         print strings.UNRAR
@@ -281,7 +291,7 @@ class TvRobot:
     ##############################
     # public methods
     ##############################
-    def add_torrent(self):
+    def add_torrent(self, name = None):
         print strings.ADDING_TORRENT 
         torrent_file = open(self.options.add_torrent, "rb").read().encode("base64")
         torrent = TransmissionManager().add(torrent_file)
@@ -300,14 +310,18 @@ class TvRobot:
             "type": self.options.add_torrent_type
         })
 
-        self.__add_subscription(guid)
+        self.__add_subscription(guid, name)
         print strings.ADD_COMPLETED
 
-    def add_magnet(self):
+    def add_magnet(self, magnet_link = None, download_type = None, name = None):
         print strings.ADDING_MAGNET
-        torrent = TransmissionManager().add_uri(self.options.add_magnet)
+        if magnet_link is None:
+            magnet_link = self.options.add_magnet
+        if download_type is None:
+            download_type = self.options.add_torrent_type
+        torrent = TransmissionManager().add_uri(magnet_link)
 
-        print strings.ADDING_DOWNLOAD % self.options.add_torrent_type
+        print strings.ADDING_DOWNLOAD % download_type
         guid = uuid.uuid4()
         query = """
             INSERT INTO Download
@@ -318,10 +332,10 @@ class TvRobot:
         DatabaseManager().execute_query_and_close(query, {
             "guid": guid, 
             "transmission_id": torrent.keys()[0], 
-            "type": self.options.add_torrent_type
+            "type": download_type
         })
 
-        self.__add_subscription(guid)
+        self.__add_subscription(guid, name)
         print strings.ADD_COMPLETED
 
     def clean_torrent(self, torrent):
@@ -382,9 +396,48 @@ class TvRobot:
         finally:
             LockManager().unlock(lock_guid)
 
+    def search(self):
+        lock_guid = LockManager().set_lock('schedule_search')
+        try:
+            tv_downloads = ScheduleManager().get_scheduled_tv()
+            for download in tv_downloads:
+                season_num = str(download[4]).zfill(2)
+                episode_num = str(download[3]).zfill(2)
+                search_str = "%s S%sE%s" % (download[1], season_num, episode_num)
+                print "Beeeep, searching for %s" % search_str
+                magnet = TorrentSearchManager(self.driver).get_magnet(search_str, 'TV', (download[7] == 0))
+                if magnet is not None:
+                    self.add_magnet(magnet, 'Episode', search_str)
+                    ScheduleManager().update_schedule(download[0])
+                else:
+                    print "couldn't find a good one. trying again later."
+        finally:
+            LockManager().unlock(lock_guid)
+
+        """lock_guid = LockManager().set_lock('sms_search')
+        try:
+            sms_downloads = GoogleVoiceManager().get_new_download_messages()
+            for download in sms_downloads:
+                print "Not yet."
+        finally:
+            LockManager().unlock(lock_guid)"""
+            
+        lock_guid = LockManager().set_lock('sms_schedules')
+        try:
+            sms_schedules = GoogleVoiceManager().get_new_schedule_messages()
+            for sch in sms_schedules:
+                if sch['type'] == 'TV':
+                    ScheduleManager().add_scheduled_episode(sch)
+                    print "added %s" % sch['name']
+                elif sch['type'] == 'MOVIE':
+                    print "No movies yet."
+                    #ScheduleManager().add_scheduled_movie(sch)
+                else:
+                    print "I dunno wat dat shit be."
+        finally:
+            LockManager().unlock(lock_guid)
 
 
-#LETS DO THIS SHIT
 if __name__ == '__main__':
     robot = TvRobot()
     if robot.options.add_torrent is not None:
@@ -394,5 +447,10 @@ if __name__ == '__main__':
     elif robot.options.clean_ids is not None:
         ids = [x.strip() for x in robot.options.clean_ids.split(',')]
         robot.clean_torrents(ids)
+    elif robot.options.search_only:
+        robot.search()
+    elif robot.options.clean_only:
+        robot.clean_torrents()
     else:
+        robot.search()
         robot.clean_torrents()
