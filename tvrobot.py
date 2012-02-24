@@ -52,10 +52,10 @@ class TvRobot:
 
             for x in range(config.SELENIUM['timeout']):
                 try:
-                    # self.driver = webdriver.Remote("http://%s:%s/wd/hub"%
-                    #     (config.SELENIUM['server'], config.SELENIUM['port']),
-                    #     webdriver.DesiredCapabilities.FIREFOX)
-                    self.driver = webdriver.Firefox()
+                    self.driver = webdriver.Remote("http://%s:%s/wd/hub"%
+                        (config.SELENIUM['server'], config.SELENIUM['port']),
+                        webdriver.DesiredCapabilities.FIREFOX)
+                    #self.driver = webdriver.Firefox()
                     break
                 except:
                     time.sleep(1)
