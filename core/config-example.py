@@ -13,6 +13,10 @@ GOOGLE_VOICE = {
 	
 }
 
+TVRAGE = {
+	'api_key': 'herpderp'
+}
+
 TRANSMISSION = {
 	'server': 'mytransmissionserver.org',
 	'port': 9091,

@@ -3,10 +3,11 @@ import uuid
 import requests
 import xml.etree.cElementTree as ElementTree
 
+from config import TVRAGE
 from mysql import DatabaseManager
 from core.util import XmlDictConfig
 
-TVRAGE_API_URL = 'http://services.tvrage.com/feeds/episodeinfo.php?show=%s'
+TVRAGE_API_URL = ('http://services.tvrage.com/feeds/episodeinfo.php?key=%s' % TVRAGE['api_key']) + '&show=%s'
 
 class ScheduleManager:
 
@@ -30,7 +31,7 @@ class ScheduleManager:
 
     def __get_show_data(self, name):
         data = {'season': None, 'episode': None, 'timestamp': None, 'tvrage_show_id': None, 'duration': None}
-        print (TVRAGE_API_URL % name.replace(' ', '%20'))
+        #print (TVRAGE_API_URL % name.replace(' ', '%20'))
         response = requests.get(TVRAGE_API_URL % name.replace(' ', '%20'))
         if response.status_code == requests.codes['\o/']:
             root = ElementTree.XML(response.text)
@@ -44,6 +45,8 @@ class ScheduleManager:
                 data['tvrage_show_id'] = rdata['id']
                 data['duration'] = int(rdata['runtime']) * 60
                 data['show_name'] = rdata['name']
+            else:
+                print "ended"
         else:
             print "BEEP BEEEEEP TVRAGE IS DOWN(%s)" % response.status_code
         return data
