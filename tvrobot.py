@@ -397,6 +397,34 @@ class TvRobot:
             LockManager().unlock(lock_guid)
 
     def search(self):
+        lock_guid = LockManager().set_lock('update_schedules')
+        try:
+            tv_downloads = ScheduleManager().get_scheduled_tv()
+            for download in tv_downloads:
+                if download[6] is None:
+                    ScheduleManager().update_schedule(download[0])
+        finally:
+            LockManager().unlock(lock_guid)
+
+        lock_guid = LockManager().set_lock('sms_schedules')
+        try:
+            sms_schedules = GoogleVoiceManager().get_new_schedule_messages()
+            for sch in sms_schedules:
+                if sch['type'] == 'TV':
+                    print sch
+                    did = ScheduleManager().add_scheduled_episode(sch)
+                    if did is not None:
+                        print "added %s as %s" % (sch['name'], did)
+                    else:
+                        print "Couldn't find a show called %s " % sch['name']
+                elif sch['type'] == 'MOVIE':
+                    print "No movies yet."
+                    #ScheduleManager().add_scheduled_movie(sch)
+                else:
+                    print "I dunno wat dat shit be."
+        finally:
+            LockManager().unlock(lock_guid)
+
         lock_guid = LockManager().set_lock('schedule_search')
         try:
             tv_downloads = ScheduleManager().get_scheduled_tv()
@@ -421,21 +449,7 @@ class TvRobot:
                 print "Not yet."
         finally:
             LockManager().unlock(lock_guid)"""
-            
-        lock_guid = LockManager().set_lock('sms_schedules')
-        try:
-            sms_schedules = GoogleVoiceManager().get_new_schedule_messages()
-            for sch in sms_schedules:
-                if sch['type'] == 'TV':
-                    ScheduleManager().add_scheduled_episode(sch)
-                    print "added %s" % sch['name']
-                elif sch['type'] == 'MOVIE':
-                    print "No movies yet."
-                    #ScheduleManager().add_scheduled_movie(sch)
-                else:
-                    print "I dunno wat dat shit be."
-        finally:
-            LockManager().unlock(lock_guid)
+        
 
 
 if __name__ == '__main__':

@@ -12,32 +12,35 @@ class ScheduleManager:
 
     def __get_next_episode(self, name):
         data = {'season': None, 'episode': None, 'timestamp': None}
-        response = requests.get(TVRAGE_API_URL % name)
+        response = requests.get(TVRAGE_API_URL % name.replace(' ', '%20'))
         if response.status_code == requests.codes['\o/']:
             root = ElementTree.XML(response.text)
             rdata = XmlDictConfig(root)
             if rdata['ended'] is None:
-                epid = rdata['nextepisode']['number']
-                data['season'] = epid.split('x')[0]
-                data['episode'] = epid.split('x')[1]
-                data['timestamp'] = rdata['nextepisode']['airtime']['text']
+                if 'nextepisode' in rdata.keys():
+                    epid = rdata['nextepisode']['number']
+                    data['season'] = epid.split('x')[0]
+                    data['episode'] = epid.split('x')[1]
+                    data['timestamp'] = rdata['nextepisode']['airtime']['text']
             else:
                 print "ended"
         else:
             print "BEEP BEEEEEP TVRAGE IS DOWN(%s)" % response.status_code
         return data
 
-    def __get_episode_data(self, name):
+    def __get_show_data(self, name):
         data = {'season': None, 'episode': None, 'timestamp': None, 'tvrage_show_id': None, 'duration': None}
-        response = requests.get(TVRAGE_API_URL % name)
+        print (TVRAGE_API_URL % name.replace(' ', '%20'))
+        response = requests.get(TVRAGE_API_URL % name.replace(' ', '%20'))
         if response.status_code == requests.codes['\o/']:
             root = ElementTree.XML(response.text)
             rdata = XmlDictConfig(root)
             if rdata['ended'] is None:
-                epid = rdata['nextepisode']['number']
-                data['season'] = epid.split('x')[0]
-                data['episode'] = epid.split('x')[1]
-                data['timestamp'] = rdata['nextepisode']['airtime']['text']
+                if 'nextepisode' in rdata.keys():
+                    epid = rdata['nextepisode']['number']
+                    data['season'] = epid.split('x')[0]
+                    data['episode'] = epid.split('x')[1]
+                    data['timestamp'] = rdata['nextepisode']['airtime']['text']
                 data['tvrage_show_id'] = rdata['id']
                 data['duration'] = int(rdata['runtime']) * 60
                 data['show_name'] = rdata['name']
@@ -71,13 +74,16 @@ class ScheduleManager:
         return DatabaseManager().execute_query_and_close(query, sdata)
 
     def add_scheduled_episode(self, data):
-        sdata = self.__get_episode_data(data['name'])
-        sdata['guid'] = uuid.uuid4()
-        sdata['sms_guid'] = data['sms_guid']
-        query = """
-            INSERT INTO EpisodeSchedule
-            (guid, show_name, tvrage_show_id, duration, season_number, episode_number, timestamp, sms_guid)
-            VALUES (%(guid)s, %(show_name)s, %(tvrage_show_id)s, %(duration)s, %(season)s, %(episode)s, %(timestamp)s, %(sms_guid)s)
-        """
-        DatabaseManager().execute_query_and_close(query, sdata)
-        return sdata['guid']
+        sdata = self.__get_show_data(data['name'])
+        if sdata['tvrage_show_id'] is None:
+            return None
+        else:
+            sdata['guid'] = uuid.uuid4()
+            sdata['sms_guid'] = data['sms_guid']
+            query = """
+                INSERT INTO EpisodeSchedule
+                (guid, show_name, tvrage_show_id, duration, season_number, episode_number, timestamp, sms_guid)
+                VALUES (%(guid)s, %(show_name)s, %(tvrage_show_id)s, %(duration)s, %(season)s, %(episode)s, %(timestamp)s, %(sms_guid)s)
+            """
+            DatabaseManager().execute_query_and_close(query, sdata)
+            return sdata['guid']
