@@ -6,7 +6,7 @@ import xml.etree.cElementTree as ElementTree
 from mysql import DatabaseManager
 from core.util import XmlDictConfig
 
-TVRAGE_API_URL = 'http://services.tvrage.com/feeds/episodeinfo.php?show=%s&exact=1'
+TVRAGE_API_URL = 'http://services.tvrage.com/feeds/episodeinfo.php?show=%s'
 
 class ScheduleManager:
 
