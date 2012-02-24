@@ -64,14 +64,6 @@ class TvRobot:
                 raise Exception (
                 "Couldn't connect to the selenium server at %s after %s seconds." % 
                 (config.SELENIUM['server'], config.SELENIUM['timeout']))
-
-        #enable the google voice manager
-        try:
-            self.voice = GoogleVoiceManager()
-            self.sms_enabled = True
-        except:
-            print strings.GOOGLE_VOICE_ERROR_CONNECT
-            self.sms_enabled = False
         
         print strings.HELLO
 
@@ -411,12 +403,14 @@ class TvRobot:
             sms_schedules = GoogleVoiceManager().get_new_schedule_messages()
             for sch in sms_schedules:
                 if sch['type'] == 'TV':
-                    print sch
+                    #print sch
                     did = ScheduleManager().add_scheduled_episode(sch)
                     if did is not None:
                         print "added %s as %s" % (sch['name'], did)
+                        GoogleVoiceManager().send_message(sch['phone'], "Ok, I added a schedule for %s" % sch['name'])
                     else:
                         print "Couldn't find a show called %s " % sch['name']
+                        GoogleVoiceManager().send_message(sch['phone'], "Couldn't find a show called %s " % sch['name'])
                 elif sch['type'] == 'MOVIE':
                     print "No movies yet."
                     #ScheduleManager().add_scheduled_movie(sch)
