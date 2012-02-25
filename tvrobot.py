@@ -422,7 +422,7 @@ class TvRobot:
             tv_downloads = ScheduleManager().get_scheduled_tv()
             for download in tv_downloads:
                 season_num = str(download[4]).zfill(2)
-                episode_num = str(download[3]).zfill(2)
+                episode_num = str(download[5]).zfill(2)
                 search_str = "%s S%sE%s" % (download[1], season_num, episode_num)
                 print "Beeeep, searching for %s" % search_str
                 magnet = TorrentSearchManager(self.driver).get_magnet(search_str, 'TV', (download[7] == 0))
