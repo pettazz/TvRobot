@@ -31,10 +31,16 @@ class TorrentSearchManager:
                     magnet_link = None
                 else:
                     print "SD RESULTS!"
-                    magnet_link = self.driver.find_element_by_css_selector('table#searchResult tr:first-child a[title="Download this torrent using magnet"]').get_attribute('href')
+                    #this is just straight up foolish, but for some reason the magnet hrefs dont work in htmlunit :(
+                    #magnet_link = self.driver.find_element_by_css_selector('table#searchResult tr:first-child a[title="Download this torrent using magnet"]').get_attribute('href')
+                    page = self.driver.page_source
+                    magnet_link = page.split('Download this torrent using magnet')[0][:-9].rsplit('href="', 1)[1]
             else:
                 magnet_link = None
         else:
             print "HD RESULTS!"
-            magnet_link = self.driver.find_element_by_css_selector('table#searchResult tr:first-child a[title="Download this torrent using magnet"]').get_attribute('href')
+            #this is just straight up foolish, but for some reason the magnet hrefs dont work in htmlunit :(
+            #magnet_link = self.driver.find_element_by_css_selector('table#searchResult tr:first-child a[title="Download this torrent using magnet"]').get_attribute('href')
+            page = self.driver.page_source
+            magnet_link = page.split('Download this torrent using magnet')[0][:-9].rsplit('href="', 1)[1]
         return magnet_link
