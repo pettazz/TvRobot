@@ -68,11 +68,13 @@ class ScheduleManager:
         """
         result = DatabaseManager().fetchone_query_and_close(query, {'guid': guid})
         sdata = self.__get_next_episode(result[0])
+        sdata['guid'] = guid
         query = """
             UPDATE EpisodeSchedule SET
             season_number = %(season)s,
             episode_number = %(episode)s,
-            timestamp = %(timestamp)s
+            timestamp = %(timestamp)s,
+            WHERE guid = %(guid)s
         """
         return DatabaseManager().execute_query_and_close(query, sdata)
 
