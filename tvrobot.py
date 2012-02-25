@@ -54,7 +54,7 @@ class TvRobot:
                 try:
                     self.driver = webdriver.Remote("http://%s:%s/wd/hub"%
                         (config.SELENIUM['server'], config.SELENIUM['port']),
-                        webdriver.DesiredCapabilities.HTMLUNIT)
+                        webdriver.DesiredCapabilities.HTMLUNITWITHJS)
                     #self.driver = webdriver.Firefox()
                     break
                 except:
@@ -111,22 +111,23 @@ class TvRobot:
         for torrent_id in files:
             print strings.FINDING_VIDEO_FILE % torrent_id
             for f in files[torrent_id]:
-                ext = files[torrent_id][f]['name'].rsplit('.', 1)[1]
-                if ext in config.FILETYPES['video'] and files[torrent_id][f]['size'] > max_size:
-                    decompress = False
-                    max_size = files[torrent_id][f]['size']
-                    file_name = files[torrent_id][f]['name']
-                elif ext in config.FILETYPES['compressed'] and files[torrent_id][f]['size'] > max_size:
-                    if ext == 'zip':
-                        decompress = 'zip'
+                if "sample" not in files[torrent_id][f]['name'] and "trailer" not in files[torrent_id][f]['name']:
+                    ext = files[torrent_id][f]['name'].rsplit('.', 1)[1]
+                    if ext in config.FILETYPES['video'] and files[torrent_id][f]['size'] > max_size:
+                        decompress = False
                         max_size = files[torrent_id][f]['size']
                         file_name = files[torrent_id][f]['name']
-                    elif ext == 'rar':
-                        decompress = 'rar'
-                        max_size = files[torrent_id][f]['size']
-                        file_name = files[torrent_id][f]['name']
-                    else:
-                        return None    
+                    elif ext in config.FILETYPES['compressed'] and files[torrent_id][f]['size'] > max_size:
+                        if ext == 'zip':
+                            decompress = 'zip'
+                            max_size = files[torrent_id][f]['size']
+                            file_name = files[torrent_id][f]['name']
+                        elif ext == 'rar':
+                            decompress = 'rar'
+                            max_size = files[torrent_id][f]['size']
+                            file_name = files[torrent_id][f]['name']
+                        else:
+                            return None
         if decompress == 'rar':
             file_name = self.__unrar_file(file_name)
         if decompress == 'zip':
