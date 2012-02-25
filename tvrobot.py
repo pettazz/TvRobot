@@ -349,8 +349,7 @@ class TvRobot:
                         self.__delete_video_file(file_path)
                     TransmissionManager().remove(torrent.id, delete_data = True)
                     print strings.DOWNLOAD_CLEAN_COMPLETED
-                    if self.sms_enabled:
-                        self.__send_sms_completed(torrent)
+                    self.__send_sms_completed(torrent)
                 else:
                     print strings.UNSUPPORTED_FILE_TYPE % torrent.id 
             elif video_type in ('Set', 'Season', 'Series'):
@@ -362,9 +361,8 @@ class TvRobot:
                         print strings.MOVING_VIDEO_FILE % (video_type, vidja)
                         self.__move_video_file(video_path, video_type)
                     TransmissionManager().remove(torrent.id, delete_data = True)
-                    print strings.DOWNLOAD_CLEAN_COMPLETED
-                    if self.sms_enabled:
-                        self.__send_sms_completed(torrent)
+                    print strings.DOWNLOAD_CLEAN_COMPLETED    
+                    self.__send_sms_completed(torrent)
                 else:
                     print strings.UNSUPPORTED_FILE_TYPE % torrent.id 
             elif video_type is not None:
