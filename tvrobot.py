@@ -180,9 +180,12 @@ class TvRobot:
                     name = res[1]
                 GoogleVoiceManager().send_message(phone, "BEEP. File's done: %s" % name)
         
-    def __add_subscription(self, download_guid, name = ""):
+    def __add_subscription(self, download_guid, name = "", user = None):
         guid = uuid.uuid4()
-        user_id = UserManager().get_user_id()
+        if user is None:
+            user_id = UserManager().get_user_id()
+        else:
+            user_id = user
         query = """
             INSERT INTO Subscription
             (guid, User, Download, name)
@@ -306,7 +309,7 @@ class TvRobot:
         self.__add_subscription(guid, name)
         print strings.ADD_COMPLETED
 
-    def add_magnet(self, magnet_link = None, download_type = None, name = None):
+    def add_magnet(self, magnet_link = None, download_type = None, name = None, user = None):
         print strings.ADDING_MAGNET
         if magnet_link is None:
             magnet_link = self.options.add_magnet
@@ -328,7 +331,7 @@ class TvRobot:
             "type": download_type
         })
 
-        self.__add_subscription(guid, name)
+        self.__add_subscription(guid, name = name, user = user)
         print strings.ADD_COMPLETED
 
     def clean_torrent(self, torrent):
@@ -408,8 +411,8 @@ class TvRobot:
                         print "added %s as %s" % (sch['name'], did)
                         GoogleVoiceManager().send_message(sch['phone'], "Ok, I added a schedule for %s" % sch['name'])
                     else:
-                        print "Couldn't find a show called %s " % sch['name']
-                        GoogleVoiceManager().send_message(sch['phone'], "Couldn't find a show called %s " % sch['name'])
+                        print "Couldn't find a currently airing show called %s " % sch['name']
+                        GoogleVoiceManager().send_message(sch['phone'], "Couldn't find a currently airing show called %s " % sch['name'])
                 elif sch['type'] == 'MOVIE':
                     print "No movies yet."
                     #ScheduleManager().add_scheduled_movie(sch)
@@ -422,16 +425,22 @@ class TvRobot:
         try:
             tv_downloads = ScheduleManager().get_scheduled_tv()
             for download in tv_downloads:
-                season_num = str(download[4]).zfill(2)
-                episode_num = str(download[5]).zfill(2)
-                search_str = "%s S%sE%s" % (download[1], season_num, episode_num)
-                print "Beeeep, searching for %s" % search_str
-                magnet = TorrentSearchManager(self.driver).get_magnet(search_str, 'TV', (download[7] == 0))
-                if magnet is not None:
-                    self.add_magnet(magnet, 'Episode', search_str)
-                    ScheduleManager().update_schedule(download[0])
-                else:
-                    print "couldn't find a good one. trying again later."
+                if download[10] == 1:
+                    season_num = str(download[4]).zfill(2)
+                    episode_num = str(download[5]).zfill(2)
+                    search_str = "%s S%sE%s" % (download[1], season_num, episode_num)
+                    print "Beeeep, searching for %s" % search_str
+                    magnet = TorrentSearchManager(self.driver).get_magnet(search_str, 'TV', (download[7] == 0))
+                    if magnet is not None:
+                        self.add_magnet(magnet, 'Episode', name = search_str, user = download[9])
+                        query = """
+                            UPDATE EpisodeSchedule SET
+                            new = 0 WHERE guid = %(guid)s
+                        """
+                        DatabaseManager().execute_query_and_close(query, {'guid': download[0]})
+                        ScheduleManager().update_schedule(download[0])
+                    else:
+                        print "couldn't find a good one. trying again later."
         finally:
             LockManager().unlock(lock_guid)
 

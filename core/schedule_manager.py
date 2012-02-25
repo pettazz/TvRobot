@@ -6,6 +6,7 @@ import xml.etree.cElementTree as ElementTree
 from config import TVRAGE
 from mysql import DatabaseManager
 from core.util import XmlDictConfig
+from core.user_manager import UserManager
 
 TVRAGE_API_URL = ('http://services.tvrage.com/feeds/episodeinfo.php?key=%s' % TVRAGE['api_key']) + '&show=%s'
 
@@ -57,48 +58,57 @@ class ScheduleManager:
         query = """
             SELECT * FROM EpisodeSchedule WHERE
             (timestamp + duration) < %(now)s
+            AND new = 1
         """
         result = DatabaseManager().fetchall_query_and_close(query, {'now': now})
         return result
 
     def update_schedule(self, guid):
         query = """
-            SELECT show_name FROM EpisodeSchedule WHERE
+            SELECT show_name, season_number, episode_number, duration, timestamp FROM EpisodeSchedule WHERE
             guid = %(guid)s
         """
         result = DatabaseManager().fetchone_query_and_close(query, {'guid': guid})
         sdata = self.__get_next_episode(result[0])
-        sdata['guid'] = guid
-        query = """
-            UPDATE EpisodeSchedule SET
-            season_number = %(season)s,
-            episode_number = %(episode)s,
-            timestamp = %(timestamp)s,
-            WHERE guid = %(guid)s
-        """
-        return DatabaseManager().execute_query_and_close(query, sdata)
+        if result[1] == sdata['season_number'] and result[2] == sdata['episode_number'] \
+           and int(sdata['timestamp']) + int(data['runtime']) == int(result[3]) + int(result[4]):
+            sdata['guid'] = guid
+            query = """
+                UPDATE EpisodeSchedule SET
+                season_number = %(season)s,
+                episode_number = %(episode)s,
+                timestamp = %(timestamp)s,
+                new = 1
+                WHERE guid = %(guid)s
+            """
+            return DatabaseManager().execute_query_and_close(query, sdata)
+        else:
+            return None
 
     def add_scheduled_episode(self, data):
         sdata = self.__get_show_data(data['name'])
+        user = UserManager().get_user_id_by_phone(data['phone'])
         if sdata['tvrage_show_id'] is None:
             # TODO: make a better way of handling cancelled shows. this is kinda stupid.
             sdata['guid'] = uuid.uuid4()
             sdata['sms_guid'] = data['sms_guid']
             sdata['name'] = data['name']
+            sdata['user_id'] = user
             query = """
                 INSERT INTO EpisodeSchedule
-                (guid, show_name, tvrage_show_id, duration, season_number, episode_number, timestamp, sms_guid)
-                VALUES (%(guid)s, %(name)s, '0', '0', '0', '0', '4294967295', %(sms_guid)s)
+                (guid, show_name, tvrage_show_id, duration, season_number, episode_number, timestamp, sms_guid, User)
+                VALUES (%(guid)s, %(name)s, '0', '0', '0', '0', '4294967295', %(sms_guid)s, %(user_id)s)
             """
             DatabaseManager().execute_query_and_close(query, sdata)
             return None
         else:
             sdata['guid'] = uuid.uuid4()
             sdata['sms_guid'] = data['sms_guid']
+            sdata['user_id'] = user
             query = """
                 INSERT INTO EpisodeSchedule
-                (guid, show_name, tvrage_show_id, duration, season_number, episode_number, timestamp, sms_guid)
-                VALUES (%(guid)s, %(show_name)s, %(tvrage_show_id)s, %(duration)s, %(season)s, %(episode)s, %(timestamp)s, %(sms_guid)s)
+                (guid, show_name, tvrage_show_id, duration, season_number, episode_number, timestamp, sms_guid, User)
+                VALUES (%(guid)s, %(show_name)s, %(tvrage_show_id)s, %(duration)s, %(season)s, %(episode)s, %(timestamp)s, %(sms_guid)s, %(user_id)s)
             """
             DatabaseManager().execute_query_and_close(query, sdata)
             return sdata['guid']
