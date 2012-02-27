@@ -45,7 +45,7 @@ class TvRobot:
         #start the selenium server if we need to and try to connect
         if not (self.options.clean_only or (self.options.add_torrent is not None) or (self.options.clean_ids is not None) or (self.options.add_magnet is not None)):
             if config.SELENIUM['server'] == "localhost":
-                selenium_launcher.execute_selenium(
+                self.selenese = selenium_launcher.execute_selenium(
                     config.SELENIUM['server'], 
                     config.SELENIUM['port'],
                     config.SELENIUM['log_path'])
@@ -70,6 +70,11 @@ class TvRobot:
     def __del__(self):
         try:
             self.driver.quit()
+        except:
+            pass
+
+        try:
+            self.selenese.kill()
         except:
             pass
 
