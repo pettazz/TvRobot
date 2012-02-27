@@ -1,6 +1,6 @@
 from googlevoice import Voice
 import BeautifulSoup
-import md5
+import hashlib
 
 from config import GOOGLE_VOICE
 from mysql import DatabaseManager
@@ -49,13 +49,13 @@ class GoogleVoiceManager:
             sms['text'] = sms['text'].lower()
             if sms['text'].startswith('add schedule '):
                 query = "SELECT guid FROM EpisodeSchedule WHERE sms_guid = %(sms_guid)s"
-                if DatabaseManager().fetchone_query_and_close(query, {'sms_guid': md5.md5(sms['text']).hexdigest()}) is None:
+                if DatabaseManager().fetchone_query_and_close(query, {'sms_guid': hashlib.md5(sms['text']).hexdigest()}) is None:
                     #example sms: 
                     # {u'text': u'Poop', u'from': u'+14132976806:', 'id': u'd4f1ef49f44625f912e0ee757483ac3fb19d2a41', u'time': u'1:57 PM'}
                     sch = {}
                     sch['phone'] = sms['from'].split('+1')[1][:-1]
                     sch['user'] = UserManager().get_user_id_by_phone(sch['phone'])
-                    sch['sms_guid'] = md5.md5(sms['text']).hexdigest()
+                    sch['sms_guid'] = hashlib.md5(sms['text']).hexdigest()
                     sch['type'] = sms['text'].split('add schedule ')[1].split(' ')[0].upper()
                     sch['name'] = sms['text'].split('add schedule ')[1].split(' ', 1)[1]
                     new_smses.append(sch)

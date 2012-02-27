@@ -68,7 +68,10 @@ class TvRobot:
         print strings.HELLO
 
     def __del__(self):
-        self.driver.quit()
+        try:
+            self.driver.quit()
+        except:
+            pass
 
     def __signal_catch_stop(self, signal, frame = None):
         """catch a ctrl-c and kill the program"""
