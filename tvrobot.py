@@ -182,7 +182,7 @@ class TvRobot:
         if result is not None:
             for res in result:
                 phone = res[0]
-                if res[1] is not None:
+                if res[1] is None:
                     name = torrent.name
                 else:
                     name = res[1]
