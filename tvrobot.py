@@ -424,7 +424,7 @@ class TvRobot:
                             timestr = "%s day(s), %s hour(s)" % (int(days), int(hours))
                         else:
                             timestr = "%s hour(s)" % int(hours)
-                        GoogleVoiceManager().send_message(sch['phone'], "Ok, I added a schedule for %s. Next episode is on in %s" % (did['show_name'], timestr))
+                        GoogleVoiceManager().send_message(sch['phone'], "Ok, I added a schedule for %s. Next episode is on in %s." % (did['show_name'], timestr))
                     else:
                         print "Couldn't find a currently airing show called %s " % sch['name']
                         GoogleVoiceManager().send_message(sch['phone'], "Couldn't find a currently airing show called %s " % sch['name'])
