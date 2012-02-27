@@ -24,6 +24,7 @@ class ScheduleManager:
                     data['season'] = epid.split('x')[0]
                     data['episode'] = epid.split('x')[1]
                     data['timestamp'] = rdata['nextepisode']['airtime']['text']
+                    data['duration'] = int(rdata['runtime']) * 60
             else:
                 print "ended"
         else:
@@ -70,8 +71,8 @@ class ScheduleManager:
         """
         result = DatabaseManager().fetchone_query_and_close(query, {'guid': guid})
         sdata = self.__get_next_episode(result[0])
-        if result[1] == sdata['season_number'] and result[2] == sdata['episode_number'] \
-           and int(sdata['timestamp']) + int(data['runtime']) == int(result[3]) + int(result[4]):
+        if result[1] == sdata['season'] and result[2] == sdata['episode'] \
+           and int(sdata['duration']) + int(data['runtime']) == int(result[3]) + int(result[4]):
             sdata['guid'] = guid
             query = """
                 UPDATE EpisodeSchedule SET
