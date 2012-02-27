@@ -416,8 +416,15 @@ class TvRobot:
                     #print sch
                     did = ScheduleManager().add_scheduled_episode(sch)
                     if did is not None:
-                        print "added %s as %s" % (sch['name'], did)
-                        GoogleVoiceManager().send_message(sch['phone'], "Ok, I added a schedule for %s" % sch['name'])
+                        print "added %s as %s" % (sch['name'], did['guid'])
+                        diff = time.time() - int(did['timestamp'])
+                        days, remainder = divmod(diff, 86400)
+                        hours, r = divmod(remainder, 60)
+                        if days > 0:
+                            timestr = "%s days, %s hours" % (days, hours)
+                        else:
+                            timestr = "%s hours" % hours
+                        GoogleVoiceManager().send_message(sch['phone'], "Ok, I added a schedule for %s. Next episode is on in %s" % (did['name'], timestr))
                     else:
                         print "Couldn't find a currently airing show called %s " % sch['name']
                         GoogleVoiceManager().send_message(sch['phone'], "Couldn't find a currently airing show called %s " % sch['name'])

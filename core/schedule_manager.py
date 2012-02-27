@@ -112,4 +112,4 @@ class ScheduleManager:
                 VALUES (%(guid)s, %(show_name)s, %(tvrage_show_id)s, %(duration)s, %(season)s, %(episode)s, %(timestamp)s, %(sms_guid)s, %(user_id)s)
             """
             DatabaseManager().execute_query_and_close(query, sdata)
-            return sdata['guid']
+            return sdata
