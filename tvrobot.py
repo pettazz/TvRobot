@@ -401,10 +401,9 @@ class TvRobot:
     def search(self):
         lock_guid = LockManager().set_lock('update_schedules')
         try:
-            tv_downloads = ScheduleManager().get_scheduled_tv()
+            tv_downloads = ScheduleManager().get_old_schedules()
             for download in tv_downloads:
-                if download[6] is None:
-                    ScheduleManager().update_schedule(download[0])
+                ScheduleManager().update_schedule(download[0])
         finally:
             LockManager().unlock(lock_guid)
 
@@ -417,14 +416,17 @@ class TvRobot:
                     did = ScheduleManager().add_scheduled_episode(sch)
                     if did is not None:
                         print "added %s as %s" % (sch['name'], did['guid'])
-                        diff = int(did['timestamp']) - time.time()
-                        days, remainder = divmod(diff, 86400)
-                        hours = remainder / 3600
-                        if days > 0:
-                            timestr = "%s day(s), %s hour(s)" % (int(days), int(hours))
+                        if 'timestamp' in did.keys():
+                            diff = int(did['timestamp']) - time.time()
+                            days, remainder = divmod(diff, 86400)
+                            hours = remainder / 3600
+                            if days > 0:
+                                timestr = "Next episode is on in %s day(s), %s hour(s)" % (int(days), int(hours))
+                            else:
+                                timestr = "Next episode is on in %s hour(s)" % int(hours)
                         else:
-                            timestr = "%s hour(s)" % int(hours)
-                        GoogleVoiceManager().send_message(sch['phone'], "Ok, I added a schedule for %s. Next episode is on in %s." % (did['show_name'], timestr))
+                            timestr = ""
+                        GoogleVoiceManager().send_message(sch['phone'], "Ok, I added a schedule for %s. %s" % (did['show_name'], timestr))
                     else:
                         print "Couldn't find a currently airing show called %s " % sch['name']
                         GoogleVoiceManager().send_message(sch['phone'], "Couldn't find a currently airing show called %s " % sch['name'])

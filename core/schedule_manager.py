@@ -53,6 +53,18 @@ class ScheduleManager:
             print "BEEP BEEEEEP TVRAGE IS DOWN(%s)" % response.status_code
         return data
 
+    def get_old_schedules(self):
+        now = time.time()
+
+        query = """
+            SELECT * FROM EpisodeSchedule WHERE
+            ((timestamp + duration) < %(now)s
+            AND new = 0) OR
+            timestamp IS NULL
+        """
+        result = DatabaseManager().fetchall_query_and_close(query, {'now': now})
+        return result
+
     def get_scheduled_tv(self):
         now = time.time()
 
@@ -70,10 +82,15 @@ class ScheduleManager:
             guid = %(guid)s
         """
         result = DatabaseManager().fetchone_query_and_close(query, {'guid': guid})
+        print "looking for schedule updates for %s" % result[0]
         sdata = self.__get_next_episode(result[0])
-        if result[1] == sdata['season'] and result[2] == sdata['episode'] \
-           and int(sdata['duration']) + int(data['runtime']) == int(result[3]) + int(result[4]):
+        if sdata['timestamp'] is None or (result[1] == int(sdata['season']) and result[2] == int(sdata['episode']) \
+           and int(sdata['duration']) + int(sdata['timestamp']) == int(result[3]) + int(result[4])):
+            print "none yet."
+            return None
+        else:
             sdata['guid'] = guid
+            print "got an update. updating timestamp to %s" % sdata['timestamp']
             query = """
                 UPDATE EpisodeSchedule SET
                 season_number = %(season)s,
@@ -83,8 +100,6 @@ class ScheduleManager:
                 WHERE guid = %(guid)s
             """
             return DatabaseManager().execute_query_and_close(query, sdata)
-        else:
-            return None
 
     def add_scheduled_episode(self, data):
         sdata = self.__get_show_data(data['name'])
