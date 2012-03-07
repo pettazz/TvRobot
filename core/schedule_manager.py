@@ -89,17 +89,18 @@ class ScheduleManager:
             print "none yet."
             return None
         else:
-            sdata['guid'] = guid
-            print "got an update. updating timestamp to %s" % sdata['timestamp']
-            query = """
-                UPDATE EpisodeSchedule SET
-                season_number = %(season)s,
-                episode_number = %(episode)s,
-                timestamp = %(timestamp)s,
-                new = 1
-                WHERE guid = %(guid)s
-            """
-            return DatabaseManager().execute_query_and_close(query, sdata)
+            if sdata['show_name'] == result[0]:
+                sdata['guid'] = guid
+                print "got an update. updating timestamp to %s" % sdata['timestamp']
+                query = """
+                    UPDATE EpisodeSchedule SET
+                    season_number = %(season)s,
+                    episode_number = %(episode)s,
+                    timestamp = %(timestamp)s,
+                    new = 1
+                    WHERE guid = %(guid)s
+                """
+                return DatabaseManager().execute_query_and_close(query, sdata)
 
     def add_scheduled_episode(self, data):
         sdata = self.__get_show_data(data['name'])
