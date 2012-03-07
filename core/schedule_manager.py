@@ -25,6 +25,7 @@ class ScheduleManager:
                     data['episode'] = epid.split('x')[1]
                     data['timestamp'] = rdata['nextepisode']['airtime']['text']
                     data['duration'] = int(rdata['runtime']) * 60
+                    data['show_name'] = rdata['name']
             else:
                 print "ended"
         else:
