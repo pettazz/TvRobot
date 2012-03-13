@@ -85,8 +85,12 @@ class ScheduleManager:
         result = DatabaseManager().fetchone_query_and_close(query, {'guid': guid})
         print "looking for schedule updates for %s" % result[0]
         sdata = self.__get_next_episode(result[0])
+        if result[4] is not None:
+            prev_stamp = int(result[4])
+        else:
+            prev_stamp = 0
         if sdata['timestamp'] is None or (result[1] == int(sdata['season']) and result[2] == int(sdata['episode']) \
-           and int(sdata['duration']) + int(sdata['timestamp']) == int(result[3]) + int(result[4])):
+           and int(sdata['duration']) + int(sdata['timestamp']) == int(result[3]) + prev_stamp):
             print "none yet."
             return None
         else:
