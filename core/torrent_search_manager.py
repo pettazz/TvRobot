@@ -26,7 +26,7 @@ class TorrentSearchManager:
         if page_interactions.is_text_visible(self.driver, 'No hits. Try adding an asterisk in you search phrase.', 'h2'):
             if sd_fallback:
                 self.driver.get(SEARCH_URL[media_type]['SD'] % search)
-                page_loads.wait_for_element_present(self.driver, "p.footer", By.CSS_SELECTOR, 120)
+                page_loads.wait_for_element_present(self.driver, "p#footer", By.CSS_SELECTOR, 120)
                 if page_interactions.is_text_visible(self.driver, 'No hits. Try adding an asterisk in you search phrase.', 'h2'):
                     magnet_link = None
                 else:
