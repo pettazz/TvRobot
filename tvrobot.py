@@ -455,7 +455,7 @@ class TvRobot:
                             new = 0 WHERE guid = %(guid)s
                         """
                         DatabaseManager().execute_query_and_close(query, {'guid': download[0]})
-                        ScheduleManager().update_schedule(download[0])
+                        # ScheduleManager().update_schedule(download[0])
                     else:
                         print "couldn't find a good one. trying again later."
         finally:
