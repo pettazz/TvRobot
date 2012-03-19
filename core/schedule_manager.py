@@ -16,7 +16,7 @@ class ScheduleManager:
         data = {'season': None, 'episode': None, 'timestamp': None}
         response = requests.get(TVRAGE_API_URL % name.replace(' ', '%20'))
         if response.status_code == requests.codes['\o/']:
-            root = ElementTree.XML(response.text)
+            root = ElementTree.XML(response.text.encode('utf-8'))
             rdata = XmlDictConfig(root)
             if rdata['ended'] is None:
                 if 'nextepisode' in rdata.keys():
@@ -37,7 +37,7 @@ class ScheduleManager:
         #print (TVRAGE_API_URL % name.replace(' ', '%20'))
         response = requests.get(TVRAGE_API_URL % name.replace(' ', '%20'))
         if response.status_code == requests.codes['\o/']:
-            root = ElementTree.XML(response.text)
+            root = ElementTree.XML(response.text.encode('utf-8'))
             rdata = XmlDictConfig(root)
             if rdata['ended'] is None:
                 if 'nextepisode' in rdata.keys():
