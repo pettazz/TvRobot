@@ -8,6 +8,9 @@ from mysql import DatabaseManager
 from core.util import XmlDictConfig
 from core.user_manager import UserManager
 
+#Getting the offset from the xml is hard
+TZ_OFFSET = 18000
+
 TVRAGE_API_URL = ('http://services.tvrage.com/feeds/episodeinfo.php?key=%s' % TVRAGE['api_key']) + '&show=%s'
 
 class ScheduleManager:
@@ -23,7 +26,7 @@ class ScheduleManager:
                     epid = rdata['nextepisode']['number']
                     data['season'] = epid.split('x')[0]
                     data['episode'] = epid.split('x')[1]
-                    data['timestamp'] = rdata['nextepisode']['airtime']['text']
+                    data['timestamp'] = int(rdata['nextepisode']['airtime']['text']) + TZ_OFFSET
                     data['duration'] = int(rdata['runtime']) * 60
                     data['show_name'] = rdata['name']
             else:
@@ -44,7 +47,7 @@ class ScheduleManager:
                     epid = rdata['nextepisode']['number']
                     data['season'] = epid.split('x')[0]
                     data['episode'] = epid.split('x')[1]
-                    data['timestamp'] = rdata['nextepisode']['airtime']['text']
+                    data['timestamp'] = int(rdata['nextepisode']['airtime']['text']) + TZ_OFFSET
                 data['tvrage_show_id'] = rdata['id']
                 data['duration'] = int(rdata['runtime']) * 60
                 data['show_name'] = rdata['name']
