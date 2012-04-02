@@ -92,8 +92,7 @@ class ScheduleManager:
             prev_stamp = int(result[4])
         else:
             prev_stamp = 0
-        if sdata['timestamp'] is None or (result[1] == int(sdata['season']) and result[2] == int(sdata['episode']) \
-           and int(sdata['duration']) + int(sdata['timestamp']) == int(result[3]) + prev_stamp):
+        if sdata['timestamp'] is None or (result[1] == int(sdata['season']) and result[2] == int(sdata['episode'])):
             print "none yet."
             return None
         else:
