@@ -119,7 +119,9 @@ class TvRobot:
         for torrent_id in files:
             print strings.FINDING_VIDEO_FILE % torrent_id
             for f in files[torrent_id]:
-                if "sample" not in files[torrent_id][f]['name'] and "trailer" not in files[torrent_id][f]['name']:
+                if "sample" not in files[torrent_id][f]['name'].lower() \
+                    and "trailer" not in files[torrent_id][f]['name'].lower() \
+                    and "bonus features" not in files[torrent_id][f]['name'].lower():
                     ext = files[torrent_id][f]['name'].rsplit('.', 1)[1]
                     if ext in config.FILETYPES['video'] and files[torrent_id][f]['size'] > max_size:
                         decompress = False
@@ -262,8 +264,8 @@ class TvRobot:
     def __move_video_file(self, file_path, file_type):
         if config.TVROBOT['completed_move_method'] == 'FABRIC':
             video_name = file_path.rsplit('/', 1)[1]
-            local_path = file_path
-            # local_path = self.__shellquote(file_path)
+            # local_path = file_path
+            local_path = self.__shellquote(file_path)
             remote_path = config.MEDIA['remote_path'][file_type]
             # remote_path = self.__shellquote(config.MEDIA['remote_path'][file_type])
             try:
