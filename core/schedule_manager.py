@@ -31,7 +31,7 @@ class ScheduleManager:
                     data['show_name'] = rdata['name']
             else:
                 print "ended"
-                return false
+                return False
         else:
             print "BEEP BEEEEEP TVRAGE IS DOWN(%s)" % response.status_code
         return data
