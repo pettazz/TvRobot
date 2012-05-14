@@ -31,6 +31,7 @@ class ScheduleManager:
                     data['show_name'] = rdata['name']
             else:
                 print "ended"
+                return false
         else:
             print "BEEP BEEEEEP TVRAGE IS DOWN(%s)" % response.status_code
         return data
@@ -88,26 +89,29 @@ class ScheduleManager:
         result = DatabaseManager().fetchone_query_and_close(query, {'guid': guid})
         print "looking for schedule updates for %s" % result[0]
         sdata = self.__get_next_episode(result[0])
-        if result[4] is not None:
-            prev_stamp = int(result[4])
+        if sdata:
+            if result[4] is not None:
+                prev_stamp = int(result[4])
+            else:
+                prev_stamp = 0
+            if sdata['timestamp'] is None or (result[1] == int(sdata['season']) and result[2] == int(sdata['episode'])):
+                print "none yet."
+                return None
+            else:
+                if sdata['show_name'] == result[0]:
+                    sdata['guid'] = guid
+                    print "got an update. updating timestamp to %s" % sdata['timestamp']
+                    query = """
+                        UPDATE EpisodeSchedule SET
+                        season_number = %(season)s,
+                        episode_number = %(episode)s,
+                        timestamp = %(timestamp)s,
+                        new = 1
+                        WHERE guid = %(guid)s
+                    """
+                    return DatabaseManager().execute_query_and_close(query, sdata)
         else:
-            prev_stamp = 0
-        if sdata['timestamp'] is None or (result[1] == int(sdata['season']) and result[2] == int(sdata['episode'])):
-            print "none yet."
-            return None
-        else:
-            if sdata['show_name'] == result[0]:
-                sdata['guid'] = guid
-                print "got an update. updating timestamp to %s" % sdata['timestamp']
-                query = """
-                    UPDATE EpisodeSchedule SET
-                    season_number = %(season)s,
-                    episode_number = %(episode)s,
-                    timestamp = %(timestamp)s,
-                    new = 1
-                    WHERE guid = %(guid)s
-                """
-                return DatabaseManager().execute_query_and_close(query, sdata)
+            return False
 
     def add_scheduled_episode(self, data):
         sdata = self.__get_show_data(data['name'])
