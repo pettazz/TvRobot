@@ -17,7 +17,10 @@ class ScheduleManager:
 
     def __get_next_episode(self, name):
         data = {'season': None, 'episode': None, 'timestamp': None}
-        response = requests.get(TVRAGE_API_URL % name.replace(' ', '%20'))
+        try:
+            response = requests.get(TVRAGE_API_URL % name.replace(' ', '%20'))
+        except:
+            print "BEEP. TVRage isn't responding to our request for this one, we'll have to try again later."
         if response.status_code == requests.codes['\o/']:
             root = ElementTree.XML(response.text.encode('ascii', 'ignore'))
             rdata = XmlDictConfig(root)
