@@ -12,7 +12,11 @@ class GoogleVoiceManager:
         self.voice.login(GOOGLE_VOICE['username'], GOOGLE_VOICE['password'])
 
     def send_message(self, to, message):
-        return self.voice.send_sms(to, message)
+        try:
+            return self.voice.send_sms(to, message)
+        except:
+            print "BOOP. There was a problem sending the sms notification."
+            return false
 
     def extractsms(self):
         """
