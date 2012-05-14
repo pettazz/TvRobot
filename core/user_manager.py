@@ -29,6 +29,17 @@ class UserManager:
 
         return user_id
 
+    def get_user_phone_by_id(self, id):
+        query = """
+            SELECT phone FROM User WHERE
+            id = %(id)s
+        """
+        result = DatabaseManager().fetchone_query_and_close(query, {'id': id})
+        if result is not None:
+            return result[0]
+        else:
+            return None
+
     def get_user_id_by_phone(self, phone):
         query = """
             SELECT id FROM User WHERE
