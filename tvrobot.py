@@ -405,7 +405,16 @@ class TvRobot:
         try:
             tv_downloads = ScheduleManager().get_old_schedules()
             for download in tv_downloads:
-                ScheduleManager().update_schedule(download[0])
+                updated = ScheduleManager().update_schedule(download[0])
+                if updated == False:
+                    phone = UserManager().get_user_phone_by_id(download[9])
+                    query = """
+                        DELETE FROM EpisodeSchedule
+                        WHERE guid = %(guid)s
+                    """
+                    DatabaseManager().execute_query_and_close(query, {'guid': download[0]})
+                    GoogleVoiceManager().send_message(phone, "Oh noes, looks like %s was cancelled. I had to delete it from my schedules. If this doesn't sound right, try adding it again." % download[1])
+
         finally:
             LockManager().unlock(lock_guid)
 
