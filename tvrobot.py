@@ -98,6 +98,15 @@ class TvRobot:
         o.add_option("-i", "--clean-ids", action="store", type="string", dest="clean_ids", 
         help="Cleans up specific Transmission download ids and then stops. Comma separated list.")
 
+        o.add_option("-u", "--schedule-updates-only", action="store_true", dest="schedule_updates_only", 
+        help="Attempts to update any existing schedules and then exits.")
+
+        o.add_option("-x", "--sms-update-only", action="store_true", dest="sms_updates_only", 
+        help="Attempts to add any newly received sms schedules and then exits.")
+
+        o.add_option("-p", "--download-schedules-only", action="store_true", dest="download_schedules_only", 
+        help="Attempts to find and download any torrents by schedules and then exits.")
+
         o.add_option("-s", "--search-only", action="store_true", dest="search_only", 
         help="Searches for and adds any scheduled Episodes or Movies and exits. Does not clean up finished torrents.")
 
@@ -401,6 +410,11 @@ class TvRobot:
             LockManager().unlock(lock_guid)
 
     def search(self):
+        self.run_update_schedules()
+        self.run_sms_schedules()
+        self.run_schedule_search()
+
+    def run_update_schedules(self):
         lock_guid = LockManager().set_lock('update_schedules')
         try:
             tv_downloads = ScheduleManager().get_old_schedules()
@@ -418,6 +432,7 @@ class TvRobot:
         finally:
             LockManager().unlock(lock_guid)
 
+    def run_sms_schedules(self):
         lock_guid = LockManager().set_lock('sms_schedules')
         try:
             sms_schedules = GoogleVoiceManager().get_new_schedule_messages()
@@ -449,6 +464,7 @@ class TvRobot:
         finally:
             LockManager().unlock(lock_guid)
 
+    def run_schedule_search(self):
         lock_guid = LockManager().set_lock('schedule_search')
         try:
             tv_downloads = ScheduleManager().get_scheduled_tv()
@@ -495,6 +511,12 @@ if __name__ == '__main__':
         robot.search()
     elif robot.options.clean_only:
         robot.clean_torrents()
+    elif robot.options.schedule_updates_only:
+        robot.run_update_schedules()
+    elif robot.options.sms_updates_only:
+        ronot.run_sms_schedules()
+    elif robot.options.download_schedules_only:
+        robot.run_schedule_search()
     else:
         robot.search()
         robot.clean_torrents()
