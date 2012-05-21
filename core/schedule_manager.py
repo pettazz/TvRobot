@@ -26,7 +26,8 @@ class ScheduleManager:
             root = ElementTree.XML(response.text.encode('ascii', 'ignore'))
             rdata = XmlDictConfig(root)
             if rdata['ended'] is None:
-                if 'nextepisode' in rdata.keys():
+                required_keys = ['nextepisode', 'season', 'timestamp', 'duration']
+                if set(required_keys).issubset(rdata.keys()) and 'number' in rdata['nextepisode'].keys():
                     epid = rdata['nextepisode']['number']
                     data['season'] = epid.split('x')[0]
                     data['episode'] = epid.split('x')[1]
