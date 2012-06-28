@@ -25,6 +25,7 @@ class ScheduleManager:
         if response.status_code == requests.codes['\o/']:
             root = ElementTree.XML(response.text.encode('ascii', 'ignore'))
             rdata = XmlDictConfig(root)
+            print rdata
             if rdata['ended'] is None:
                 required_keys = ['nextepisode', 'name', 'duration']
                 if set(required_keys).issubset(rdata.keys()) and 'number' in rdata['nextepisode'].keys():
@@ -34,6 +35,8 @@ class ScheduleManager:
                     data['timestamp'] = int(rdata['nextepisode']['airtime']['text']) + TZ_OFFSET
                     data['duration'] = int(rdata['runtime']) * 60
                     data['show_name'] = rdata['name']
+                else:
+                    print "incomplete data from TVRage"
             else:
                 print "ended"
                 return False
