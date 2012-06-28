@@ -27,7 +27,7 @@ class ScheduleManager:
             rdata = XmlDictConfig(root)
             print rdata
             if rdata['ended'] is None:
-                required_keys = ['nextepisode', 'name', 'duration']
+                required_keys = ['nextepisode', 'name', 'runtime']
                 if set(required_keys).issubset(rdata.keys()) and 'number' in rdata['nextepisode'].keys():
                     epid = rdata['nextepisode']['number']
                     data['season'] = epid.split('x')[0]
