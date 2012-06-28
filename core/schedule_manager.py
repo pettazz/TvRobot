@@ -55,6 +55,7 @@ class ScheduleManager:
         if response.status_code == requests.codes['\o/']:
             root = ElementTree.XML(response.text.encode('ascii', 'ignore'))
             rdata = XmlDictConfig(root)
+            print rdata
             if rdata['ended'] is None:
                 if 'nextepisode' in rdata.keys():
                     epid = rdata['nextepisode']['number']
