@@ -53,7 +53,10 @@ class ScheduleManager:
                     epid = rdata['nextepisode']['number']
                     data['season'] = epid.split('x')[0]
                     data['episode'] = epid.split('x')[1]
-                    data['timestamp'] = int(rdata['nextepisode']['airtime']['text']) + TZ_OFFSET
+                    if rdata['nextepisode']['airtime']['text'] is not None:
+                        data['timestamp'] = int(rdata['nextepisode']['airtime']['text']) + TZ_OFFSET
+                    else:
+                        data['timestamp'] = 0
                 data['tvrage_show_id'] = rdata['id']
                 data['duration'] = int(rdata['runtime']) * 60
                 data['show_name'] = rdata['name']
