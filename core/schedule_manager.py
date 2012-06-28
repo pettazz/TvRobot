@@ -36,7 +36,8 @@ class ScheduleManager:
                     data['duration'] = int(rdata['runtime']) * 60
                     data['show_name'] = rdata['name']
                 else:
-                    print "incomplete data from TVRage"
+                    print "incomplete data from TVRage. Missing keys:"
+                    print [x for x in required_keys if x not in rdata.keys()]
             else:
                 print "ended"
                 return False
