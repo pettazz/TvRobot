@@ -10,11 +10,13 @@ TVROBOT = {
 GOOGLE_VOICE = {
 	'username': 'tehGoogol',
 	'password': 'aaaaaaaa',
-	
+
 }
 
 TVRAGE = {
-	'api_key': 'herpderp'
+	'api_key': 'herpderp',
+	'tz_offset': -10800
+	# i think its safe to say TVRage has no idea what theyre doing with their timestamps
 }
 
 TRANSMISSION = {
@@ -41,7 +43,7 @@ DATABASE = {
 	'server': 'mymysqlserver.xxx',
 	'port': 3306,
 	'user': 'tvrobot',
-	'password': 'hunter2', 
+	'password': 'hunter2',
 	'schema': 'TvRobot'
 }
 
