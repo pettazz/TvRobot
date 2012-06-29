@@ -1,4 +1,4 @@
-import os 
+import os
 import time
 import logging
 import math
@@ -10,7 +10,7 @@ import hashlib
 
 from optparse import OptionParser, OptionValueError
 from selenium import webdriver
-import transmissionrpc 
+import transmissionrpc
 from core import selenium_launcher
 from core.google_voice_manager import GoogleVoiceManager
 from core.transmission_manager import TransmissionManager
@@ -46,7 +46,7 @@ class TvRobot:
         if not (self.options.clean_only or (self.options.add_torrent is not None) or (self.options.clean_ids is not None) or (self.options.add_magnet is not None)):
             if config.SELENIUM['server'] == "localhost":
                 self.selenese = selenium_launcher.execute_selenium(
-                    config.SELENIUM['server'], 
+                    config.SELENIUM['server'],
                     config.SELENIUM['port'],
                     config.SELENIUM['log_path'])
 
@@ -62,9 +62,9 @@ class TvRobot:
 
             if not hasattr(self, 'driver') or self.driver is None:
                 raise Exception (
-                "Couldn't connect to the selenium server at %s after %s seconds." % 
+                "Couldn't connect to the selenium server at %s after %s seconds." %
                 (config.SELENIUM['server'], config.SELENIUM['timeout']))
-        
+
         print strings.HELLO
 
     def __del__(self):
@@ -84,7 +84,7 @@ class TvRobot:
         LockManager().unlock()
         if hasattr(self, "driver"):
             self.driver.quit()
-        os.kill(os.getpid(), 9) 
+        os.kill(os.getpid(), 9)
 
     def __create_parser(self):
         """optparser"""
@@ -92,22 +92,22 @@ class TvRobot:
         desc = "TV ROBOT CAN GET YOUR TV AND MOVIES BECAUSE FUCK YEAH!"
 
         o = OptionParser(usage=usage, description=desc)
-        o.add_option("-c", "--clean-only", action="store_true", dest="clean_only", 
+        o.add_option("-c", "--clean-only", action="store_true", dest="clean_only",
         help="Cleans up any already completed downloads and exits. Does not search for or add any torrents.")
 
-        o.add_option("-i", "--clean-ids", action="store", type="string", dest="clean_ids", 
+        o.add_option("-i", "--clean-ids", action="store", type="string", dest="clean_ids",
         help="Cleans up specific Transmission download ids and then stops. Comma separated list.")
 
-        o.add_option("-u", "--schedule-updates-only", action="store_true", dest="schedule_updates_only", 
+        o.add_option("-u", "--schedule-updates-only", action="store_true", dest="schedule_updates_only",
         help="Attempts to update any existing schedules and then exits.")
 
-        o.add_option("-x", "--sms-update-only", action="store_true", dest="sms_updates_only", 
+        o.add_option("-x", "--sms-update-only", action="store_true", dest="sms_updates_only",
         help="Attempts to add any newly received sms schedules and then exits.")
 
-        o.add_option("-p", "--download-schedules-only", action="store_true", dest="download_schedules_only", 
+        o.add_option("-p", "--download-schedules-only", action="store_true", dest="download_schedules_only",
         help="Attempts to find and download any torrents by schedules and then exits.")
 
-        o.add_option("-s", "--search-only", action="store_true", dest="search_only", 
+        o.add_option("-s", "--search-only", action="store_true", dest="search_only",
         help="Searches for and adds any scheduled Episodes or Movies and exits. Does not clean up finished torrents.")
 
         o.add_option("-a", "--add-torrent", action="store", default=None, dest="add_torrent",
@@ -181,7 +181,7 @@ class TvRobot:
         if result is not None:
             result = result[0]
         return result
-            
+
     def __send_sms_completed(self, torrent):
         query = """
             SELECT U.phone, S.name FROM User U, Download D, Subscription S WHERE
@@ -198,7 +198,7 @@ class TvRobot:
                 else:
                     name = res[1]
                 GoogleVoiceManager().send_message(phone, "BEEP. File's done: %s" % name)
-        
+
     def __add_subscription(self, download_guid, name = "", user = None):
         guid = uuid.uuid4()
         if user is None:
@@ -231,9 +231,9 @@ class TvRobot:
                 print strings.CAUGHT_EXCEPTION
                 raise e
         else: #config.TVROBOT['completed_move_method'] == 'LOCAL':
-            pass    
-        return "%s/*" % guid 
-            
+            pass
+        return "%s/*" % guid
+
     def __unzip_file(self, file_path):
         print strings.UNZIP
         guid = str(uuid.uuid4().hex)
@@ -252,9 +252,9 @@ class TvRobot:
                 print strings.CAUGHT_EXCEPTION
                 raise e
         else: #config.TVROBOT['completed_move_method'] == 'LOCAL':
-            pass    
-        return "%s/*" % guid 
-            
+            pass
+        return "%s/*" % guid
+
     def __delete_video_file(self, file_path):
         if config.TVROBOT['completed_move_method'] == 'FABRIC':
             # file_path = self.__shellquote(file_path)
@@ -268,7 +268,7 @@ class TvRobot:
                 print strings.CAUGHT_EXCEPTION
                 raise e
         else: #config.TVROBOT['completed_move_method'] == 'LOCAL':
-            pass     
+            pass
 
     def __move_video_file(self, file_path, file_type):
         if config.TVROBOT['completed_move_method'] == 'FABRIC':
@@ -307,7 +307,7 @@ class TvRobot:
     # public methods
     ##############################
     def add_torrent(self, name = None):
-        print strings.ADDING_TORRENT 
+        print strings.ADDING_TORRENT
         torrent_file = open(self.options.add_torrent, "rb").read().encode("base64")
         torrent = TransmissionManager().add(torrent_file)
 
@@ -320,8 +320,8 @@ class TvRobot:
             (%(guid)s, %(transmission_id)s, %(type)s)
         """
         DatabaseManager().execute_query_and_close(query, {
-            "guid": guid, 
-            "transmission_id": torrent.keys()[0], 
+            "guid": guid,
+            "transmission_id": torrent.keys()[0],
             "type": self.options.add_torrent_type
         })
 
@@ -345,8 +345,8 @@ class TvRobot:
             (%(guid)s, %(transmission_id)s, %(type)s)
         """
         DatabaseManager().execute_query_and_close(query, {
-            "guid": guid, 
-            "transmission_id": torrent.keys()[0], 
+            "guid": guid,
+            "transmission_id": torrent.keys()[0],
             "type": download_type
         })
 
@@ -357,7 +357,7 @@ class TvRobot:
         if torrent.progress == 100:
             video_type = self.__get_torrent_type(torrent.id)
             if video_type in ('Episode', 'Movie'):
-                #single file 
+                #single file
                 video_file_name = self.__get_video_file_path(TransmissionManager().get_files(torrent.id))
                 if video_file_name is not None and video_type is not None:
                     video_path = "%s/%s" % (TransmissionManager().get_session().download_dir, video_file_name)
@@ -374,7 +374,7 @@ class TvRobot:
                     print strings.DOWNLOAD_CLEAN_COMPLETED
                     self.__send_sms_completed(torrent)
                 else:
-                    print strings.UNSUPPORTED_FILE_TYPE % torrent.id 
+                    print strings.UNSUPPORTED_FILE_TYPE % torrent.id
             elif video_type in ('Set', 'Season', 'Series'):
                 #some movies bro
                 video_files = self.__get_all_video_file_paths(TransmissionManager().get_files(torrent.id), kill_samples=("sample" not in torrent.name.lower()))
@@ -384,16 +384,16 @@ class TvRobot:
                         print strings.MOVING_VIDEO_FILE % (video_type, vidja)
                         self.__move_video_file(video_path, video_type)
                     TransmissionManager().remove(torrent.id, delete_data = True)
-                    print strings.DOWNLOAD_CLEAN_COMPLETED    
+                    print strings.DOWNLOAD_CLEAN_COMPLETED
                     self.__send_sms_completed(torrent)
                 else:
-                    print strings.UNSUPPORTED_FILE_TYPE % torrent.id 
+                    print strings.UNSUPPORTED_FILE_TYPE % torrent.id
             elif video_type is not None:
-                print strings.UNSUPPORTED_DOWNLOAD_TYPE % torrent.id 
+                print strings.UNSUPPORTED_DOWNLOAD_TYPE % torrent.id
             else:
-                print strings.UNRECOGNIZED_TORRENT % torrent.id 
+                print strings.UNRECOGNIZED_TORRENT % torrent.id
         else:
-            print strings.TORRENT_DOWNLOADING % torrent.id 
+            print strings.TORRENT_DOWNLOADING % torrent.id
 
     def clean_torrents(self, ids=None):
         lock_guid = LockManager().set_lock('clean')
@@ -442,7 +442,7 @@ class TvRobot:
                     did = ScheduleManager().add_scheduled_episode(sch)
                     if did is not None:
                         print "added %s as %s" % (sch['name'], did['guid'])
-                        if 'timestamp' in did.keys():
+                        if 'timestamp' in did.keys() and did['timestamp'] is not None:
                             diff = int(did['timestamp']) - time.time()
                             days, remainder = divmod(diff, 86400)
                             hours = remainder / 3600
@@ -495,7 +495,7 @@ class TvRobot:
                 print "Not yet."
         finally:
             LockManager().unlock(lock_guid)"""
-        
+
 
 
 if __name__ == '__main__':
