@@ -9,9 +9,9 @@ from core.util import XmlDictConfig
 from core.user_manager import UserManager
 
 #Getting the offset from the xml is hard
-TZ_OFFSET = 18000
+TZ_OFFSET = TVRAGE['tz_offset']
 
-TVRAGE_API_URL = ('http://services.tvrage.com/feeds/episodeinfo.php?key=%s' % TVRAGE['api_key']) + '&show=%s'
+TVRAGE_API_URL = ('http://services.tvrage.com/myfeeds/episodeinfo.php?key=%s' % TVRAGE['api_key']) + '&show=%s'
 
 class ScheduleManager:
 
@@ -33,7 +33,7 @@ class ScheduleManager:
                     data['season'] = epid.split('x')[0]
                     data['episode'] = epid.split('x')[1]
                     if rdata['nextepisode']['airtime']['text'] is not None:
-                        data['timestamp'] = int(rdata['nextepisode']['airtime']['text']) + TZ_OFFSET
+                        data['timestamp'] = int(rdata['nextepisode']['airtime']['text']) - TZ_OFFSET
                     else:
                         data['timestamp'] = 0
                     data['duration'] = int(rdata['runtime']) * 60
@@ -62,7 +62,7 @@ class ScheduleManager:
                     data['season'] = epid.split('x')[0]
                     data['episode'] = epid.split('x')[1]
                     if rdata['nextepisode']['airtime']['text'] is not None:
-                        data['timestamp'] = int(rdata['nextepisode']['airtime']['text']) + TZ_OFFSET
+                        data['timestamp'] = int(rdata['nextepisode']['airtime']['text']) - TZ_OFFSET
                     else:
                         data['timestamp'] = 0
                 data['tvrage_show_id'] = rdata['id']
