@@ -10,6 +10,7 @@ from core.user_manager import UserManager
 
 #Getting the offset from the xml is hard
 TZ_OFFSET = TVRAGE['tz_offset']
+ACTIVE_SHOW_STATUS = ['Returning Series', 'New Series']
 
 TVRAGE_API_URL = ('http://services.tvrage.com/myfeeds/episodeinfo.php?key=%s' % TVRAGE['api_key']) + '&show=%s'
 
@@ -26,7 +27,7 @@ class ScheduleManager:
             root = ElementTree.XML(response.text.encode('ascii', 'ignore'))
             rdata = XmlDictConfig(root)
             print rdata
-            if 'status' in rdata.keys() and rdata['status'] == "Returning Series":
+            if 'status' in rdata.keys() and rdata['status'] not in ACTIVE_SHOW_STATUS:
                 required_keys = ['nextepisode', 'name', 'runtime']
                 if set(required_keys).issubset(rdata.keys()) and 'number' in rdata['nextepisode'].keys():
                     epid = rdata['nextepisode']['number']
@@ -56,7 +57,7 @@ class ScheduleManager:
             root = ElementTree.XML(response.text.encode('ascii', 'ignore'))
             rdata = XmlDictConfig(root)
             print rdata
-            if 'status' in rdata.keys() and rdata['status'] == "Returning Series":
+            if 'status' in rdata.keys() and rdata['status'] not in ACTIVE_SHOW_STATUS:
                 if 'nextepisode' in rdata.keys():
                     epid = rdata['nextepisode']['number']
                     data['season'] = epid.split('x')[0]
