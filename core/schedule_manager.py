@@ -27,7 +27,7 @@ class ScheduleManager:
             root = ElementTree.XML(response.text.encode('ascii', 'ignore'))
             rdata = XmlDictConfig(root)
             print rdata
-            if 'status' in rdata.keys() and rdata['status'] not in ACTIVE_SHOW_STATUS:
+            if 'status' in rdata.keys() and rdata['status'] in ACTIVE_SHOW_STATUS:
                 required_keys = ['nextepisode', 'name', 'runtime']
                 if set(required_keys).issubset(rdata.keys()) and 'number' in rdata['nextepisode'].keys():
                     epid = rdata['nextepisode']['number']
@@ -57,7 +57,7 @@ class ScheduleManager:
             root = ElementTree.XML(response.text.encode('ascii', 'ignore'))
             rdata = XmlDictConfig(root)
             print rdata
-            if 'status' in rdata.keys() and rdata['status'] not in ACTIVE_SHOW_STATUS:
+            if 'status' in rdata.keys() and rdata['status'] in ACTIVE_SHOW_STATUS:
                 if 'nextepisode' in rdata.keys():
                     epid = rdata['nextepisode']['number']
                     data['season'] = epid.split('x')[0]
