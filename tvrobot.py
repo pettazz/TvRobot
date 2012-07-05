@@ -217,112 +217,85 @@ class TvRobot:
     def __unrar_file(self, file_path):
         print strings.UNRAR
         guid = str(uuid.uuid4().hex)
-        if config.TVROBOT['completed_move_method'] == 'FABRIC':
-            # local_path = "%s/%s" % (TransmissionManager().get_session().download_dir, file_path)
-            local_path = self.__shellquote("%s/%s" % (TransmissionManager().get_session().download_dir, file_path))
-            path_to = file_path.rsplit('/', 1)[0]
-            # remote_path = "%s/%s/" % (TransmissionManager().get_session().download_dir, guid)
-            remote_path = self.__shellquote("%s/%s/" % (TransmissionManager().get_session().download_dir, guid))
-            try:
-                subprocess.check_call("fab unrar_file:rar_path='%s',save_path='%s'" % (local_path, remote_path),
+        src_path = "%s/%s" % (TransmissionManager().get_session().download_dir, file_path)
+        dest_path = "%s/%s/" % (TransmissionManager().get_session().download_dir, guid)
+        try:
+            if config.TVROBOT['completed_move_method'] == 'FABRIC':
+                subprocess.check_call("fab unrar_file:rar_path='%s',save_path='%s'" % (self.__shellquote(local_path), self.__shellquote(remote_path)),
                     stdout=open("%s/log_fabfileOutput.txt" % (config.TVROBOT['log_path']), "a"),
                     stderr=open("%s/log_fabfileError.txt" % (config.TVROBOT['log_path']), "a"),
                     shell=True)
-            except Exception, e:
-                print strings.CAUGHT_EXCEPTION
-                raise e
-        elif config.TVROBOT['completed_move_method'] == 'LOCAL':
-            existing_file = "%s/%s" % (TransmissionManager().get_session().download_dir, file_path)
-            new_file = "%s/%s/" % (TransmissionManager().get_session().download_dir, guid)
-            try:
-                subprocess.check_call("mkdir %s; unrar e %s %s" % (new_file, existing_file, new_file),
+            elif config.TVROBOT['completed_move_method'] == 'LOCAL':
+                subprocess.check_call("mkdir %s; unrar e %s %s" % (dest_path, src_path, dest_path),
                     stdout=open("%s/log_localfileOutput.txt" % (config.TVROBOT['log_path']), "a"),
                     stderr=open("%s/log_localfileError.txt" % (config.TVROBOT['log_path']), "a"),
                     shell=True)
-            except Exception, e:
-                print strings.CAUGHT_EXCEPTION
-                raise e
-        else:
-            print "FIX YER CONF. I ONLY KNOW FABRIC AND LOCAL."
+            else:
+                print "FIX YER CONF. I ONLY KNOW FABRIC AND LOCAL."
+        except Exception, e:
+            print strings.CAUGHT_EXCEPTION
+            raise e
+
         return "%s/*" % guid
 
     def __unzip_file(self, file_path):
         print strings.UNZIP
         guid = str(uuid.uuid4().hex)
-        if config.TVROBOT['completed_move_method'] == 'FABRIC':
-            # local_path = "%s/%s" % (TransmissionManager().get_session().download_dir, file_path)
-            local_path = self.__shellquote("%s/%s" % (TransmissionManager().get_session().download_dir, file_path))
-            path_to = file_path.rsplit('/', 1)[0]
-            # remote_path = "%s/%s/" % (TransmissionManager().get_session().download_dir, guid)
-            remote_path = self.__shellquote("%s/%s/" % (TransmissionManager().get_session().download_dir, guid))
-            try:
-                subprocess.check_call("fab unzip_file:zip_path='%s',save_path='%s'" % (local_path, remote_path),
+        src_path = "%s/%s" % (TransmissionManager().get_session().download_dir, file_path)
+        dest_path = "%s/%s/" % (TransmissionManager().get_session().download_dir, guid)
+        try:
+            if config.TVROBOT['completed_move_method'] == 'FABRIC':
+                subprocess.check_call("fab unzip_file:zip_path='%s',save_path='%s'" % (self.__shellquote(src_path), self.__shellquote(dest_path)),
                     stdout=open("%s/log_fabfileOutput.txt" % (config.TVROBOT['log_path']), "a"),
                     stderr=open("%s/log_fabfileError.txt" % (config.TVROBOT['log_path']), "a"),
                     shell=True)
-            except Exception, e:
-                print strings.CAUGHT_EXCEPTION
-                raise e
-        elif config.TVROBOT['completed_move_method'] == 'LOCAL':
-            existing_file = "%s/%s" % (TransmissionManager().get_session().download_dir, file_path)
-            new_file = "%s/%s/" % (TransmissionManager().get_session().download_dir, guid)
-            try:
-                subprocess.check_call("mkdir %s; unzip %s -d %s" % (new_file, existing_file, new_file),
+            elif config.TVROBOT['completed_move_method'] == 'LOCAL':
+                subprocess.check_call("mkdir %s; unzip %s -d %s" % (dest_path, src_path, dest_path),
                     stdout=open("%s/log_localfileOutput.txt" % (config.TVROBOT['log_path']), "a"),
                     stderr=open("%s/log_localfileError.txt" % (config.TVROBOT['log_path']), "a"),
                     shell=True)
-            except Exception, e:
-                print strings.CAUGHT_EXCEPTION
-                raise e
-        else:
-            print "FIX YER CONF. I ONLY KNOW FABRIC AND LOCAL."
+            else:
+                print "FIX YER CONF. I ONLY KNOW FABRIC AND LOCAL."
+        except Exception, e:
+            print strings.CAUGHT_EXCEPTION
+            raise e
+
         return "%s/*" % guid
 
     def __delete_video_file(self, file_path):
-        if config.TVROBOT['completed_move_method'] == 'FABRIC':
-            # file_path = self.__shellquote(file_path)
-            try:
+        try:
+            if config.TVROBOT['completed_move_method'] == 'FABRIC':
                 #this isnt a check_call because a lot can go wrong here and its not mission critical
                 subprocess.call("fab delete_file:remote_path=\"%s\"" % (file_path),
                     stdout=open("%s/log_fabfileOutput.txt" % (config.TVROBOT['log_path']), "a"),
                     stderr=open("%s/log_fabfileError.txt" % (config.TVROBOT['log_path']), "a"),
                     shell=True)
-            except Exception, e:
-                print strings.CAUGHT_EXCEPTION
-                raise e
-        elif config.TVROBOT['completed_move_method'] == 'LOCAL':
-            try:
+            elif config.TVROBOT['completed_move_method'] == 'LOCAL':
                 os.remove(file_path)
-            except Exception, e:
-                print strings.CAUGHT_EXCEPTION
-                raise e
-        else:
-            print "FIX YER CONF. I ONLY KNOW FABRIC AND LOCAL."
+            else:
+                print "FIX YER CONF. I ONLY KNOW FABRIC AND LOCAL."
+        except Exception, e:
+            print strings.CAUGHT_EXCEPTION
+            raise e
 
     def __move_video_file(self, file_path, file_type):
         video_name = file_path.rsplit('/', 1)[1]
         local_path = file_path
         remote_path = config.MEDIA['remote_path'][file_type]
-        if config.TVROBOT['completed_move_method'] == 'FABRIC':
-            # local_path = file_path
-            # remote_path = self.__shellquote(config.MEDIA['remote_path'][file_type])
-            try:
+        try:
+            if config.TVROBOT['completed_move_method'] == 'FABRIC':
                 cmd = "fab move_video:local_path=\"%s\",remote_path=\"%s\"" % (self.__shellquote(local_path), remote_path)
                 subprocess.check_call(cmd,
                     stdout=open("%s/log_fabfileOutput.txt" % (config.TVROBOT['log_path']), "a"),
                     stderr=open("%s/log_fabfileError.txt" % (config.TVROBOT['log_path']), "a"),
                     shell=True)
-            except Exception, e:
-                print strings.CAUGHT_EXCEPTION
-                raise e
-        elif config.TVROBOT['completed_move_method'] == 'LOCAL':
-            try:
+            elif config.TVROBOT['completed_move_method'] == 'LOCAL':
                 shutil.copy(local_path, remote_path)
-            except Exception, e:
-                print strings.CAUGHT_EXCEPTION
-                raise e
-        else:
-            print "FIX YER CONF. I ONLY KNOW FABRIC AND LOCAL."
+            else:
+                print "FIX YER CONF. I ONLY KNOW FABRIC AND LOCAL."
+        except Exception, e:
+            print strings.CAUGHT_EXCEPTION
+            raise e
 
     def __shellquote(self, s):
         return s.replace(' ', '\ ').replace('(', '\(').replace(')', '\)').replace("'", "\\'").replace('&', '\&').replace(',', '\,').replace('!', '\!')
