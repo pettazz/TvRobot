@@ -79,6 +79,6 @@ class GoogleVoiceManager:
                     mov['phone'] = sms['from'].split('+1')[1][:-1]
                     mov['user'] = UserManager().get_user_id_by_phone(mov['phone'])
                     mov['sms_guid'] = hashlib.md5(sms['text']).hexdigest()
-                    mov['search'] = sms['text'].split('add movie ')[1].split(' ', 1)[1]
+                    mov['search'] = sms['text'].split('add movie ')[1]
                     new_smses.append(mov)
         return new_smses
