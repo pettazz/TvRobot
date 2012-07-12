@@ -494,16 +494,16 @@ class TvRobot:
             query = "SELECT * FROM OnDemandSMS WHERE added = 0"
             waiting_movies = DatabaseManager().fetchall_query_and_close(query, {})
             for mov in waiting_movies:
-                print "Beeeep, searching for %s" % mov['search']
-                magnet = TorrentSearchManager(self.driver).get_magnet(mov['search'], 'MOVIE', True)
+                print "Beeeep, searching for %s" % mov[3]
+                magnet = TorrentSearchManager(self.driver).get_magnet(mov[3], 'MOVIE', True)
                 if magnet is not None:
-                    self.add_magnet(magnet, 'Movie', name = search, user = mov['user'])
+                    self.add_magnet(magnet, 'Movie', name = search, user = mov[2])
                     query = """
                         UPDATE OnDemandSMS SET
                         added = 1 WHERE guid = %(guid)s
                     """
-                    DatabaseManager().execute_query_and_close(query, {'guid': mov['guid']})
-                    GoogleVoiceManager().send_message(UserManager().get_user_phone_by_id(mov['user']), "Downloading %s. I'll let you know when it's done." % mov['search'])
+                    DatabaseManager().execute_query_and_close(query, {'guid': mov[0]})
+                    GoogleVoiceManager().send_message(UserManager().get_user_phone_by_id(mov[2]), "Downloading %s. I'll let you know when it's done." % mov[3])
                 else:
                     print "couldn't find a good one. trying again later."
         finally:
