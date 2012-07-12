@@ -492,7 +492,7 @@ class TvRobot:
             #search for any movies that haven't been successfully added yet
             waiting_movies = []
             query = "SELECT * FROM OnDemandSMS WHERE added = 0"
-            waiting_movies = DatabaseManager().fetchall_query_and_close(query, None)
+            waiting_movies = DatabaseManager().fetchall_query_and_close(query, {})
             for mov in waiting_movies:
                 print "Beeeep, searching for %s" % mov['search']
                 magnet = TorrentSearchManager(self.driver).get_magnet(mov['search'], 'MOVIE', True)
