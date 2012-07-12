@@ -44,7 +44,7 @@ class GoogleVoiceManager:
                     msgitem[cl] = (" ".join(span.findAll(text=True))).strip()	# put text in dict
                 msgitems.append(msgitem)					# add msg dictionary to list
         return [msg for msg in msgitems if msg['from'] != u'Me:']
-        
+
 
     def get_new_schedule_messages(self):
         smses = self.extractsms()
@@ -54,7 +54,7 @@ class GoogleVoiceManager:
             if sms['text'].startswith('add schedule '):
                 query = "SELECT guid FROM EpisodeSchedule WHERE sms_guid = %(sms_guid)s"
                 if DatabaseManager().fetchone_query_and_close(query, {'sms_guid': hashlib.md5(sms['text']).hexdigest()}) is None:
-                    #example sms: 
+                    #example sms:
                     # {u'text': u'Poop', u'from': u'+14132976806:', 'id': u'd4f1ef49f44625f912e0ee757483ac3fb19d2a41', u'time': u'1:57 PM'}
                     sch = {}
                     sch['phone'] = sms['from'].split('+1')[1][:-1]
@@ -63,4 +63,22 @@ class GoogleVoiceManager:
                     sch['type'] = sms['text'].split('add schedule ')[1].split(' ')[0].upper()
                     sch['name'] = sms['text'].split('add schedule ')[1].split(' ', 1)[1]
                     new_smses.append(sch)
+        return new_smses
+
+    def get_on_demand_movies(self):
+        smses = self.extractsms()
+        new_smses = []
+        for sms in smses:
+            sms['text'] = sms['text'].lower()
+            if sms['text'].startswith('add movie '):
+                query = "SELECT guid FROM OnDemandSMS WHERE sms_guid = %(sms_guid)s"
+                if DatabaseManager().fetchone_query_and_close(query, {'sms_guid': hashlib.md5(sms['text']).hexdigest()}) is None:
+                    #example sms:
+                    # {u'text': u'Poop', u'from': u'+14132976806:', 'id': u'd4f1ef49f44625f912e0ee757483ac3fb19d2a41', u'time': u'1:57 PM'}
+                    mov = {}
+                    mov['phone'] = sms['from'].split('+1')[1][:-1]
+                    mov['user'] = UserManager().get_user_id_by_phone(mov['phone'])
+                    mov['sms_guid'] = hashlib.md5(sms['text']).hexdigest()
+                    mov['search'] = sms['text'].split('add movie ')[1].split(' ', 1)[1]
+                    new_smses.append(mov)
         return new_smses

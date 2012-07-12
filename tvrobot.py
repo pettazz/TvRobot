@@ -418,6 +418,7 @@ class TvRobot:
             LockManager().unlock(lock_guid)
 
     def search(self):
+        self.run_on_demand_movies()
         self.run_update_schedules()
         self.run_sms_schedules()
         self.run_schedule_search()
@@ -469,6 +470,42 @@ class TvRobot:
                     #ScheduleManager().add_scheduled_movie(sch)
                 else:
                     print "I dunno wat dat shit be."
+        finally:
+            LockManager().unlock(lock_guid)
+
+    def run_on_demand_movies(self):
+        lock_guid = LockManager().set_lock('add_ondemand')
+        try:
+            #add any newly requested movies to the db
+            sms_movies = GoogleVoiceManager().get_on_demand_movies()
+            for mov in sms_movies:
+                #phone, user, sms_guid, search
+                query = """
+                    INSERT INTO OnDemandSMS
+                    (guid, sms_guid, User, search)
+                    VALUES (%(guid)s, %(sms_guid)s, %(user)s, %(search)s)
+                """
+                guid = uuid.uuid4()
+                DatabaseManager().execute_query_and_close(query, {'guid': guid, 'user': mov['user'], 'sms_guid': mov['sms_guid'], 'search': mov['search']})
+                GoogleVoiceManager().send_message(mov['phone'], "Remembering to look for %s. I'll let you know when I find it." % mov['search'])
+
+            #search for any movies that haven't been successfully added yet
+            waiting_movies = []
+            query "SELECT * FROM OnDemandSMS WHERE added = 0"
+            waiting_movies = DatabaseManager().fetchall_query_and_close(query)
+            for mov in waiting_movies:
+                print "Beeeep, searching for %s" % mov['search']
+                magnet = TorrentSearchManager(self.driver).get_magnet(mov['search'], 'MOVIE', True)
+                if magnet is not None:
+                    self.add_magnet(magnet, 'Movie', name = search, user = mov['user'])
+                    query = """
+                        UPDATE OnDemandSMS SET
+                        added = 1 WHERE guid = %(guid)s
+                    """
+                    DatabaseManager().execute_query_and_close(query, {'guid': mov['guid']})
+                    GoogleVoiceManager().send_message(UserManager().get_user_phone_by_id(mov['user']), "Downloading %s. I'll let you know when it's done." % mov['search'])
+                else:
+                    print "couldn't find a good one. trying again later."
         finally:
             LockManager().unlock(lock_guid)
 
