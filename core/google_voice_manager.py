@@ -16,7 +16,7 @@ class GoogleVoiceManager:
             return self.voice.send_sms(to, message)
         except:
             print "BOOP. There was a problem sending the sms notification."
-            return false
+            return False
 
     def extractsms(self):
         """
