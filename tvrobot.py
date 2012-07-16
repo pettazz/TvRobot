@@ -297,7 +297,7 @@ class TvRobot:
                             m_file = "%s%s" % (path, f)
                             shutil.copy(self.__shellquote(m_file), remote_path)
                 else:
-                    shutil.copy(self.__shellquote(file_path), remote_path)
+                    shutil.copy(file_path, remote_path)
             else:
                 print "FIX YER CONF. I ONLY KNOW FABRIC AND LOCAL."
         except Exception, e:
