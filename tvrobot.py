@@ -217,11 +217,11 @@ class TvRobot:
     def __unrar_file(self, file_path):
         print strings.UNRAR
         guid = str(uuid.uuid4().hex)
-        src_path = "%s/%s" % (TransmissionManager().get_session().download_dir, file_path)
-        dest_path = "%s/%s/" % (TransmissionManager().get_session().download_dir, guid)
+        src_path = self.__shellquote("%s/%s" % (TransmissionManager().get_session().download_dir, file_path))
+        dest_path = self.__shellquote("%s/%s/" % (TransmissionManager().get_session().download_dir, guid))
         try:
             if config.TVROBOT['completed_move_method'] == 'FABRIC':
-                subprocess.check_call("fab unrar_file:rar_path='%s',save_path='%s'" % (self.__shellquote(local_path), self.__shellquote(remote_path)),
+                subprocess.check_call("fab unrar_file:rar_path='%s',save_path='%s'" % (src_path, dest_path),
                     stdout=open("%s/log_fabfileOutput.txt" % (config.TVROBOT['log_path']), "a"),
                     stderr=open("%s/log_fabfileError.txt" % (config.TVROBOT['log_path']), "a"),
                     shell=True)
@@ -241,11 +241,11 @@ class TvRobot:
     def __unzip_file(self, file_path):
         print strings.UNZIP
         guid = str(uuid.uuid4().hex)
-        src_path = "%s/%s" % (TransmissionManager().get_session().download_dir, file_path)
-        dest_path = "%s/%s/" % (TransmissionManager().get_session().download_dir, guid)
+        src_path = self.__shellquote("%s/%s" % (TransmissionManager().get_session().download_dir, file_path))
+        dest_path = self.__shellquote("%s/%s/" % (TransmissionManager().get_session().download_dir, guid))
         try:
             if config.TVROBOT['completed_move_method'] == 'FABRIC':
-                subprocess.check_call("fab unzip_file:zip_path='%s',save_path='%s'" % (self.__shellquote(src_path), self.__shellquote(dest_path)),
+                subprocess.check_call("fab unzip_file:zip_path='%s',save_path='%s'" % (src_path), dest_path),
                     stdout=open("%s/log_fabfileOutput.txt" % (config.TVROBOT['log_path']), "a"),
                     stderr=open("%s/log_fabfileError.txt" % (config.TVROBOT['log_path']), "a"),
                     shell=True)
@@ -263,6 +263,7 @@ class TvRobot:
         return "%s/*" % guid
 
     def __delete_video_file(self, file_path):
+        file_path = self.__shellquote(file_path)
         try:
             if config.TVROBOT['completed_move_method'] == 'FABRIC':
                 #this isnt a check_call because a lot can go wrong here and its not mission critical
@@ -280,7 +281,7 @@ class TvRobot:
 
     def __move_video_file(self, file_path, file_type):
         video_name = file_path.rsplit('/', 1)[1]
-        local_path = file_path
+        local_path = self.__shellquote(file_path)
         remote_path = config.MEDIA['remote_path'][file_type]
         try:
             if config.TVROBOT['completed_move_method'] == 'FABRIC':
