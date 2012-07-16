@@ -305,7 +305,7 @@ class TvRobot:
             raise e
 
     def __shellquote(self, s):
-        return s.replace(' ', '\ ').replace('(', '\(').replace(')', '\)').replace("'", "\\'").replace('&', '\&').replace(',', '\,').replace('!', '\!').replace('[', '\[').replace(']', '\]')
+        return s.replace(' ', '\ ').replace('(', '\(').replace(')', '\)').replace("'", "\\'").replace('&', '\&').replace(',', '\,').replace('!', '\!')
 
     def __compare_passwords(self, given_password, existing_hash):
         salt = existing_hash.split('$')[0]
