@@ -272,7 +272,7 @@ class TvRobot:
                     stderr=open("%s/log_fabfileError.txt" % (config.TVROBOT['log_path']), "a"),
                     shell=True)
             elif config.TVROBOT['completed_move_method'] == 'LOCAL':
-                os.remove(file_path)
+                os.removedirs(file_path)
             else:
                 print "FIX YER CONF. I ONLY KNOW FABRIC AND LOCAL."
         except Exception, e:
