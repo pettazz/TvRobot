@@ -295,7 +295,7 @@ class TvRobot:
                     for f in os.listdir(path):
                         if f.rsplit('.')[0] in config.FILETYPES['video']:
                             m_file = "%s%s" % (path, f)
-                            shutil.copy(self.__shellquote(m_file), remote_path)
+                            shutil.copy(m_file, remote_path)
                 else:
                     shutil.copy(file_path, remote_path)
             else:
