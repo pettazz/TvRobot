@@ -281,7 +281,6 @@ class TvRobot:
 
     def __move_video_file(self, file_path, file_type):
         video_name = file_path.rsplit('/', 1)[1]
-        local_path = self.__shellquote(file_path)
         remote_path = config.MEDIA['remote_path'][file_type]
         try:
             if config.TVROBOT['completed_move_method'] == 'FABRIC':
@@ -291,7 +290,14 @@ class TvRobot:
                     stderr=open("%s/log_fabfileError.txt" % (config.TVROBOT['log_path']), "a"),
                     shell=True)
             elif config.TVROBOT['completed_move_method'] == 'LOCAL':
-                shutil.copy(local_path, remote_path)
+                if local_path.endswith('*'):
+                    path = local_path.split('*')[0]
+                    for f in os.listdir(path):
+                        if f.rsplit('.')[0] in config.FILETYPES['video']:
+                            m_file = "%s%s" % (path, f)
+                            shutil.copy(self.__shellquote(m_file), remote_path)
+                else:
+                    shutil.copy(self.__shellquote(local_path), remote_path)
             else:
                 print "FIX YER CONF. I ONLY KNOW FABRIC AND LOCAL."
         except Exception, e:
