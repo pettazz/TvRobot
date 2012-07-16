@@ -245,7 +245,7 @@ class TvRobot:
         dest_path = self.__shellquote("%s/%s/" % (TransmissionManager().get_session().download_dir, guid))
         try:
             if config.TVROBOT['completed_move_method'] == 'FABRIC':
-                subprocess.check_call("fab unzip_file:zip_path='%s',save_path='%s'" % (src_path), dest_path),
+                subprocess.check_call("fab unzip_file:zip_path='%s',save_path='%s'" % (src_path, dest_path),
                     stdout=open("%s/log_fabfileOutput.txt" % (config.TVROBOT['log_path']), "a"),
                     stderr=open("%s/log_fabfileError.txt" % (config.TVROBOT['log_path']), "a"),
                     shell=True)
