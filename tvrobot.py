@@ -295,7 +295,10 @@ class TvRobot:
                     for f in os.listdir(path):
                         if f.rsplit('.')[0] in config.FILETYPES['video']:
                             m_file = "%s%s" % (path, f)
+                            print "copying %s file: " % (f.rsplit('.')[0], f)
                             shutil.copy(m_file, remote_path)
+                        else:
+                            print "skipping %s file..." % f.rsplit('.')[0]
                 else:
                     shutil.copy(file_path, remote_path)
             else:
