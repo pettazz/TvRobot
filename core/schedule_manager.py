@@ -10,7 +10,7 @@ from core.user_manager import UserManager
 
 #Getting the offset from the xml is hard
 TZ_OFFSET = TVRAGE['tz_offset']
-ACTIVE_SHOW_STATUS = ['Returning Series', 'New Series']
+ACTIVE_SHOW_STATUS = ['Returning Series', 'New Series', 'Final Season']
 
 TVRAGE_API_URL = ('http://services.tvrage.com/myfeeds/episodeinfo.php?key=%s' % TVRAGE['api_key']) + '&show=%s'
 
