@@ -4,7 +4,8 @@ This contains all the main app settings
 
 TVROBOT = {
 	'log_path': 'logs',
-	'completed_move_method': 'FABRIC'
+	'completed_move_method': 'FABRIC',
+	'torrent_health_threshhold': 0.49,
 }
 
 GOOGLE_VOICE = {

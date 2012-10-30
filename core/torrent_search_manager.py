@@ -1,5 +1,6 @@
 from selenium import webdriver
 from selenium.webdriver.common.by import By
+from config import TVROBOT
 from core.selenium_fixtures import page_interactions
 from core.selenium_fixtures import page_loads
 
@@ -21,26 +22,41 @@ class TorrentSearchManager:
         self.driver = driver
 
     def get_magnet(self, search, media_type, sd_fallback = False):
-        self.driver.get(SEARCH_URL[media_type]['HD'] % search)
+        quality = 'HD'
+        rows = self.find_rows(search, media_type, quality)
+        if rows is None and sd_fallback:
+            quality = 'SD'
+            rows = self.find_rows(search, media_type, quality)
+        if rows:
+            print "%s %s results found!" % (len(rows), quality)            
+            return self.get_best_row_magnet(rows)
+        else:
+            return None
+
+    def find_rows(self, search, media_type, quality):
+        self.driver.get(SEARCH_URL[media_type][quality] % search)
         page_loads.wait_for_element_present(self.driver, "p#footer", By.CSS_SELECTOR, 120)
         if page_interactions.is_text_visible(self.driver, 'No hits. Try adding an asterisk in you search phrase.', 'h2'):
-            if sd_fallback:
-                self.driver.get(SEARCH_URL[media_type]['SD'] % search)
-                page_loads.wait_for_element_present(self.driver, "p#footer", By.CSS_SELECTOR, 120)
-                if page_interactions.is_text_visible(self.driver, 'No hits. Try adding an asterisk in you search phrase.', 'h2'):
-                    magnet_link = None
-                else:
-                    print "SD RESULTS!"
-                    #this is just straight up foolish, but for some reason the magnet hrefs dont work in htmlunit :(
-                    #magnet_link = self.driver.find_element_by_css_selector('table#searchResult tr:first-child a[title="Download this torrent using magnet"]').get_attribute('href')
-                    page = self.driver.page_source
-                    magnet_link = page.split('Download this torrent using magnet')[0][:-9].rsplit('href="', 1)[1]
-            else:
-                magnet_link = None
+            print "No results found."
+            return None
         else:
-            print "HD RESULTS!"
-            #this is just straight up foolish, but for some reason the magnet hrefs dont work in htmlunit :(
-            #magnet_link = self.driver.find_element_by_css_selector('table#searchResult tr:first-child a[title="Download this torrent using magnet"]').get_attribute('href')
-            page = self.driver.page_source
-            magnet_link = page.split('Download this torrent using magnet')[0][:-9].rsplit('href="', 1)[1]
-        return magnet_link
+            return self.driver.find_elements_by_css_selector('table#searchResult tr')
+
+    def get_best_row_magnet(self, rows):
+        print "checking torrent health..."
+        done = None
+        for resultrow in rows:
+            seeds = int(resultrow.find_element_by_xpath('//td[3]').text)
+            leechers = int(resultrow.find_element_by_xpath('//td[4]').text)
+            health = seeds / leechers
+            if health > TVROBOT['torrent_health_threshhold']:
+                print "health of %s is above threshhold, downloading dat shit" % health
+                #this is janky because htmlunit cant get the href attr for some reason. 
+                #http://stackoverflow.com/questions/7263824/get-html-source-of-webelement-in-selenium-webdriver-python
+                magnet_element = resultrow.find_element_by_xpath('//td[2]')
+                magnet_element_source = self.driver.execute_script('return arguments[0].innerHTML;', magnet_element)
+                magnet = magnet_element_source[magnet_element_source.find('magnet:'):].split('"', 1)[0]
+                print "MAGNET LINK:\n%s\n" % magnet
+                return magnet
+            else:
+                print "health of %s is below threshhold, trying next row." % health
