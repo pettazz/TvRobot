@@ -40,7 +40,8 @@ class TorrentSearchManager:
             print "No results found."
             if page_interactions.is_text_visible(self.driver, 'Search engine overloaded, please try again in a few seconds', 'div.main-content'):
                 print "TPB is overloaded."
-            return False
+                return False
+            return None
         else:
             return self.driver.find_elements_by_css_selector('table#searchResult tr')
 
