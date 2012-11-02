@@ -14,6 +14,13 @@ GOOGLE_VOICE = {
 
 }
 
+TWILIO = {
+	'ACCOUNT_SID': 'lol',
+	'AUTH_TOKEN': 'wut',
+	'phone_number': '+15555962814',
+	'split_long_sms': True            #if this is False, messages over 159 characters will be truncated
+}
+
 TVRAGE = {
 	'api_key': 'herpderp',
 	'tz_offset': -10800
