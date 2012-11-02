@@ -1,0 +1,50 @@
+{
+    'Body': [
+        'Hello robot'
+    ],
+    'FromZip': [
+        '01118'
+    ],
+    'SmsStatus': [
+        'received'
+    ],
+    'FromCountry': [
+        'US'
+    ],
+    'FromCity': [
+        'SPRINGFIELD(EL)'
+    ],
+    'ApiVersion': [
+        '2010-04-01'
+    ],
+    'To': [
+        '+14195176268'
+    ],
+    'From': [
+        '+14132976806'
+    ],
+    'ToZip': [
+        '43560'
+    ],
+    'ToCountry': [
+        'US'
+    ],
+    'ToState': [
+        'OH'
+    ],
+    'AccountSid': [
+        'ACfbd69e8db8aa5bb80c5a57cbb678edd4'
+    ],
+    'SmsSid': [
+        'SM1738ae22c0d9f1bb9cbf62aa60dc979e'
+    ],
+    'ToCity': [
+        'SYLVANIA'
+    ],
+    'FromState': [
+        'MA'
+    ],
+    'SmsMessageSid': [
+        'SM1738ae22c0d9f1bb9cbf62aa60dc979e'
+    ]
+}

@@ -1,0 +1,9 @@
+MySQL_python
+BeautifulSoup
+pycrypto
+fabric
+requests
+twisted
+twilio
+selenium==2.15
+transmissionrpc==0.8.0
