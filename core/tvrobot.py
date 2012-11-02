@@ -28,17 +28,18 @@ class TvRobot:
         print strings.HELLO
 
     def _start_selenium(self):
+        # config.SELENIUM['port'] replaced with '4445' for now to avoid colliding with the cron tvrobot tasks
         if not hasattr(self, 'driver') or self.driver is None:
             if config.SELENIUM['server'] == "localhost":
                 self.selenium_server = selenium_launcher.execute_selenium(
                     config.SELENIUM['server'],
-                    config.SELENIUM['port'],
+                    '4445',
                     config.SELENIUM['log_path'])
 
             for x in range(config.SELENIUM['timeout']):
                 try:
                     self.driver = webdriver.Remote("http://%s:%s/wd/hub"%
-                        (config.SELENIUM['server'], config.SELENIUM['port']),
+                        (config.SELENIUM['server'], '4445'),
                         webdriver.DesiredCapabilities.HTMLUNITWITHJS)
                     #self.driver = webdriver.Firefox()
                     break
