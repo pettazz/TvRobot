@@ -48,6 +48,7 @@ class TorrentSearchManager:
         for resultrow in rows:
             seeds = int(resultrow.find_element_by_xpath('//td[3]').text)
             leechers = int(resultrow.find_element_by_xpath('//td[4]').text)
+            print "SE: %s; LE: %s" % (seeds, leechers)
             health = seeds / leechers
             if health > TVROBOT['torrent_health_threshhold']:
                 print "health of %s is above threshhold, downloading dat shit" % health
