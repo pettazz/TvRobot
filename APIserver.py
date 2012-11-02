@@ -16,14 +16,17 @@ class SMSAPIHandler(Resource):
         msg_to = data['To'][0]
         msg_body = data['Body'][0]
         if msg_body.lower().startswith('add '):
-            if msg_body.lower().startswith('add movie '):
-                response = TvRobot().add_download(download_type='Movie', search=msg_body[10:], user_phone=msg_from)
+            try:
+                if msg_body.lower().startswith('add movie '):
+                    response = TvRobot().add_download(download_type='Movie', search=msg_body[10:], user_phone=msg_from)
 
-            if msg_body.lower().startswith('add episode '):
-                response = TvRobot().add_download(download_type='Episode', search=msg_body[12:], user_phone=msg_from)
+                if msg_body.lower().startswith('add episode '):
+                    response = TvRobot().add_download(download_type='Episode', search=msg_body[12:], user_phone=msg_from)
 
-            if msg_body.lower().startswith('add schedule tv '):
-                response = TvRobot().add_schedule(search=msg_body[16:], user_phone=msg_from)
+                if msg_body.lower().startswith('add schedule tv '):
+                    response = TvRobot().add_schedule(search=msg_body[16:], user_phone=msg_from)
+            except Exception as detail:
+                response = "OW. I broke: %s." % detail
         else:
             response = "Booeep. I don't know what that means."
 
