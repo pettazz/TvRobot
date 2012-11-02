@@ -41,6 +41,8 @@ class UserManager:
             return None
 
     def get_user_id_by_phone(self, phone):
+        if phone.startswith('+1'):
+            phone = phone[2:]
         query = """
             SELECT id FROM User WHERE
             phone = %(phone)s
