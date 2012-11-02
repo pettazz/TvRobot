@@ -6,11 +6,11 @@ from core.selenium_fixtures import page_loads
 
 
 SEARCH_URL = {
-    'TV': {
+    'Episode': {
         'HD': "http://thepiratebay.se/search/%s/0/7/208",
         'SD': "http://thepiratebay.se/search/%s/0/7/205"
     },
-    'MOVIE': {
+    'Movie': {
         'HD': "http://thepiratebay.se/search/%s/0/7/207",
         'SD': "http://thepiratebay.se/search/%s/0/7/201"
     }

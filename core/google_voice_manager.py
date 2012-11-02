@@ -60,7 +60,10 @@ class GoogleVoiceManager:
                     sch['phone'] = sms['from'].split('+1')[1][:-1]
                     sch['user'] = UserManager().get_user_id_by_phone(sch['phone'])
                     sch['sms_guid'] = hashlib.md5(sms['text']).hexdigest()
-                    sch['type'] = sms['text'].split('add schedule ')[1].split(' ')[0].upper()
+                    if sms['text'].split('add schedule ')[1].split(' ')[0].upper() == 'TV':
+                        sch['type'] = 'Episode'
+                    elif sms['text'].split('add schedule ')[1].split(' ')[0].upper() == 'MOVIE':
+                        sch['type'] = 'Movie'
                     sch['name'] = sms['text'].split('add schedule ')[1].split(' ', 1)[1]
                     new_smses.append(sch)
         return new_smses
