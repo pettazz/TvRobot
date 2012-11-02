@@ -31,14 +31,16 @@ class TorrentSearchManager:
             print "%s %s results found!" % (len(rows), quality)            
             return self.get_best_row_magnet(rows)
         else:
-            return None
+            return rows
 
     def find_rows(self, search, media_type, quality):
         self.driver.get(SEARCH_URL[media_type][quality] % search)
         page_loads.wait_for_element_present(self.driver, "p#footer", By.CSS_SELECTOR, 120)
         if page_interactions.is_text_visible(self.driver, 'No hits. Try adding an asterisk in you search phrase.', 'h2'):
             print "No results found."
-            return None
+            if page_interactions.is_text_visible(self.driver, 'Search engine overloaded, please try again in a few seconds'):
+                print "TPB is overloaded."
+            return False
         else:
             return self.driver.find_elements_by_css_selector('table#searchResult tr')
 

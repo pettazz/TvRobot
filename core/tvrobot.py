@@ -60,13 +60,15 @@ class TvRobot:
         print "Beeeep, searching for %s" % search
         self._start_selenium()
         magnet = TorrentSearchManager(self.driver).get_magnet(search, download_type, False)
-        if magnet is not None:
+        if magnet is None:
+            message = "BOOP. Couldn't find %s." % search
+        elif magnet is False:
+            message = "BOOEEP. The Pirate Bay is overloaded. Try again later."
+        else:
             guid = self.add_magnet(magnet, download_type)
             self.add_subscription(guid, search, user_id)
             message = "BEEP. Downloading %s." % search
-        else:
-            message = "BOOP. Couldn't find %s." % search
-
+            
         return message
 
     def add_schedule(self, search, user_id = None, user_phone = None):
