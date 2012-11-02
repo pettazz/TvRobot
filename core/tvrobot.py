@@ -94,7 +94,7 @@ class TvRobot:
 
         return response
 
-    def add_subscription(self, download_guid, name = "", user_id):
+    def add_subscription(self, download_guid, user_id, name = ""):
         guid = uuid.uuid4()
         query = """
             INSERT INTO Subscription
@@ -127,7 +127,7 @@ class TvRobot:
 
 
     # not in use yet
-    
+
     # def send_sms_completed(self, torrent):
     #     query = """
     #         SELECT U.phone, S.name FROM User U, Download D, Subscription S WHERE
