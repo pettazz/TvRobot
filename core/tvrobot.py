@@ -42,7 +42,8 @@ class TvRobot:
                         webdriver.DesiredCapabilities.HTMLUNITWITHJS)
                     #self.driver = webdriver.Firefox()
                     break
-                except:
+                except Exception, e:
+                    print e
                     time.sleep(1)
 
             if not hasattr(self, 'driver') or self.driver is None:
