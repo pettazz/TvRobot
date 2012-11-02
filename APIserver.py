@@ -11,7 +11,7 @@ class SMSAPIHandler(Resource):
         Resource.__init__(self)
 
     def render_POST(self, request):
-        data = urlparse.parse_qs(request.content.getValue(), True)
+        data = urlparse.parse_qs(request.content.getvalue(), True)
         msg_from = data['From'][0]
         msg_to = data['To'][0]
         msg_body = data['Body'][0]
