@@ -506,7 +506,7 @@ class TvRobot:
             for mov in waiting_movies:
                 print "Beeeep, searching for %s" % mov[3]
                 magnet = TorrentSearchManager(self.driver).get_magnet(mov[3], 'Movie', True)
-                if magnet is not None:
+                if magnet:
                     self.add_magnet(magnet, 'Movie', name = mov[3], user = mov[2])
                     query = """
                         UPDATE OnDemandSMS SET
@@ -530,7 +530,7 @@ class TvRobot:
                     search_str = "%s S%sE%s" % (download[1], season_num, episode_num)
                     print "Beeeep, searching for %s" % search_str
                     magnet = TorrentSearchManager(self.driver).get_magnet(search_str, 'Episode', (download[7] == 0))
-                    if magnet is not None:
+                    if magnet:
                         self.add_magnet(magnet, 'Episode', name = search_str, user = download[9])
                         query = """
                             UPDATE EpisodeSchedule SET
