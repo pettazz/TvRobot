@@ -12,6 +12,7 @@ from core import selenium_launcher
 from core.mysql import DatabaseManager
 from core.lock_manager import LockManager
 from core.schedule_manager import ScheduleManager
+from core.transmission_manager import TransmissionManager
 from core.torrent_search_manager import TorrentSearchManager
 from core.twilio_manager import TwilioManager
 from core.user_manager import UserManager
