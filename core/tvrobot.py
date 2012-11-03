@@ -68,7 +68,7 @@ class TvRobot:
             message = "BOOEEP. The Pirate Bay is overloaded. Try again later."
         else:
             guid = self.add_magnet(magnet, download_type)
-            self.add_subscription(guid, search, user_id)
+            self.add_subscription(guid, user_id, search)
             message = "BEEP. Downloading %s." % search
             
         return message
