@@ -5,5 +5,5 @@ fabric
 requests
 twisted
 twilio
-selenium==2.15
+selenium
 transmissionrpc==0.8.0

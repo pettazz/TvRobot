@@ -7,7 +7,7 @@ import urllib
 import time
 
 #selenium_dl_site = "http:code.google.com/p/selenium/downloads/list"
-selenium_jar = "http://selenium.googlecode.com/files/selenium-server-standalone-2.7.0.jar"
+selenium_jar = "http://selenium.googlecode.com/files/selenium-server-standalone-2.26.0.jar"
 jar_file = "selenium-server.jar"
 
 def download_selenium():

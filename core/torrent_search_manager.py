@@ -49,7 +49,6 @@ class TorrentSearchManager:
         print "checking torrent ratio..."
         done = None
         for resultrow in rows:
-            print self.driver.execute_script('return arguments[0].innerHTML;', resultrow)
             seeds = float(resultrow.find_element_by_css_selector('td:nth-child(3)').text)
             leechers = float(resultrow.find_element_css_selector('td:nth-child(4)').text)
             print "SE: %s; LE: %s" % (seeds, leechers)
