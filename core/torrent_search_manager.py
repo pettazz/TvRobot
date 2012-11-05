@@ -46,15 +46,15 @@ class TorrentSearchManager:
             return self.driver.find_elements_by_css_selector('table#searchResult tr')
 
     def get_best_row_magnet(self, rows):
-        print "checking torrent health..."
+        print "checking torrent ratio..."
         done = None
         for resultrow in rows:
             seeds = float(resultrow.find_element_by_xpath('//td[3]').text)
             leechers = float(resultrow.find_element_by_xpath('//td[4]').text)
             print "SE: %s; LE: %s" % (seeds, leechers)
-            health = seeds / leechers
-            if health > TVROBOT['torrent_health_threshold']:
-                print "health of %s is above threshold, downloading dat shit" % health
+            ratio = seeds / leechers
+            if ratio > TVROBOT['torrent_ratio_threshold']:
+                print "ratio of %s is above threshold, downloading dat shit" % ratio
                 #this is janky because htmlunit cant get the href attr for some reason. 
                 #http://stackoverflow.com/questions/7263824/get-html-source-of-webelement-in-selenium-webdriver-python
                 magnet_element = resultrow.find_element_by_xpath('//td[2]')
@@ -63,4 +63,4 @@ class TorrentSearchManager:
                 print "MAGNET LINK:\n%s\n" % magnet
                 return magnet
             else:
-                print "health of %s is below threshold, trying next row." % health
+                print "ratio of %s is below threshold, trying next row." % ratio
