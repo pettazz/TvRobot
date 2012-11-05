@@ -51,7 +51,7 @@ class TorrentSearchManager:
         done = None
         for resultrow in rows:
             seeds = float(resultrow.find_element_by_xpath('.//td[3]').text)
-            leechers = float(resultrow.find_element_xpath('.//td[4]').text)
+            leechers = float(resultrow.find_element_by_xpath('.//td[4]').text)
             print "SE: %s; LE: %s" % (seeds, leechers)
             ratio = seeds / leechers
             if ratio > TVROBOT['torrent_ratio_threshold']:
