@@ -26,6 +26,7 @@ class SMSAPIHandler(Resource):
                 if msg_body.lower().startswith('add schedule tv '):
                     response = TvRobot().add_schedule(search=msg_body[16:], user_phone=msg_from)
             except Exception as detail:
+                print detail
                 response = "OW. I broke: %s." % detail
         else:
             response = "Booeep. I don't know what that means."
