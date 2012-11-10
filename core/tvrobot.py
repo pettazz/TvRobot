@@ -78,7 +78,7 @@ class TvRobot:
             user_id = UserManager().get_user_id_by_phone(user_phone)
 
         print "Beeeep, searching TVRage for %s" % search
-        sch = {'name': search, 'phone': user_phone, sms_guid: 'lolnah'} #sms_guid is here for backwards compatibility 
+        sch = {'name': search, 'phone': user_phone, 'sms_guid': 'lolnah'} #sms_guid is here for backwards compatibility 
         did = ScheduleManager().add_scheduled_episode(sch)
         if did is not None:
             print "added %s as %s" % (sch['name'], did['guid'])
