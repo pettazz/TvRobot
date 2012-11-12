@@ -38,9 +38,10 @@ class TorrentSearchManager:
         page_loads.wait_for_element_present(self.driver, "p#footer", By.CSS_SELECTOR, 120)
         if page_interactions.is_text_visible(self.driver, 'No hits. Try adding an asterisk in you search phrase.', 'h2'):
             #sometimes TPB likes to strip apostrophes
-            again = self.find_rows(search.replace('\'', ''), media_type, quality)
-            if again:
-                return again
+            if search.find('\'') > -1:
+                again = self.find_rows(search.replace('\'', ''), media_type, quality)
+                if again:
+                    return again
             print "No results found."
             if page_interactions.is_text_visible(self.driver, 'Search engine overloaded, please try again in a few seconds', 'div#main-content'):
                 print "TPB is overloaded."
