@@ -44,7 +44,7 @@ class TorrentSearchManager:
             return None
         else:
             rows = self.driver.find_elements_by_css_selector('table#searchResult tbody tr')
-            return rows[]
+            return rows
 
     def get_best_row_magnet(self, rows):
         print "checking torrent ratio..."
