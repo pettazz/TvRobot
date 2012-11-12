@@ -55,7 +55,7 @@ class TvRobot:
         else:
             print "selenium driver already initialized"
 
-    def add_download(self, download_type, search, user_id = None, user_phone = None):
+    def add_download(self, download_type, search, user_id = None, user_phone = None, send_sms = False):
         if user_id is None:
             user_id = UserManager().get_user_id_by_phone(user_phone)
 
@@ -71,6 +71,8 @@ class TvRobot:
             self.add_subscription(guid, user_id, search)
             message = "BEEP. Downloading %s." % search
             
+        if send_sms:
+            TwilioManager().send_sms(message)
         return message
 
     def add_schedule(self, search, user_id = None, user_phone = None):
@@ -130,22 +132,19 @@ class TvRobot:
         print strings.ADD_COMPLETED
         return guid
 
-
-    # not in use yet
-
-    # def send_sms_completed(self, torrent):
-    #     query = """
-    #         SELECT U.phone, S.name FROM User U, Download D, Subscription S WHERE
-    #         D.transmission_id = %(torrent_id)s AND
-    #         S.Download = D.guid AND
-    #         U.id = S.User
-    #     """
-    #     result = DatabaseManager().fetchall_query_and_close(query, {'torrent_id': torrent.id})
-    #     if result is not None:
-    #         for res in result:
-    #             phone = res[0]
-    #             if res[1] is None:
-    #                 name = torrent.name
-    #             else:
-    #                 name = res[1]
-    #             TwilioManager().send_sms(phone, "BEEP. File's done: %s" % name)
+    def send_completed_sms_subscribers(self, torrent):
+        query = """
+            SELECT U.phone, S.name FROM User U, Download D, Subscription S WHERE
+            D.transmission_id = %(torrent_id)s AND
+            S.Download = D.guid AND
+            U.id = S.User
+        """
+        result = DatabaseManager().fetchall_query_and_close(query, {'torrent_id': torrent.id})
+        if result is not None:
+            for res in result:
+                phone = res[0]
+                if res[1] is None:
+                    name = torrent.name
+                else:
+                    name = res[1]
+                TwilioManager().send_sms(phone, "BEEP. File's done: %s" % name)
