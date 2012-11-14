@@ -28,7 +28,7 @@ class SMSAPIHandler(Resource):
                     'user_phone':msg_from, 
                     'send_sms':True
                 })
-                print "starting worker thread %s" % thread_names
+                print "starting worker thread %s" % thread_name
                 t.start()
 
             if msg_body.lower().startswith('add episode '):
@@ -41,7 +41,7 @@ class SMSAPIHandler(Resource):
                     'user_phone':msg_from, 
                     'send_sms':True
                 })
-                print "starting worker thread %s" % thread_names
+                print "starting worker thread %s" % thread_name
                 t.start()
 
             if msg_body.lower().startswith('add schedule tv '):
