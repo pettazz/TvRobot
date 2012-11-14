@@ -57,7 +57,13 @@ class TvRobot:
 
     def add_download(self, download_type, search, user_id = None, user_phone = None, send_sms = False):
         if user_id is None:
+            if user_phone is None:
+                raise Exception('Either a user id or phone number is required.')
             user_id = UserManager().get_user_id_by_phone(user_phone)
+        if user_phone is None:
+            if user_id is None:
+                raise Exception('Either a user id or phone number is required.')
+            user_phone = UserManager().get_user_phone_by_id(user_id)
 
         print "Beeeep, searching for %s" % search
         self._start_selenium()
@@ -72,7 +78,7 @@ class TvRobot:
             message = "BEEP. Downloading %s." % search
             
         if send_sms:
-            TwilioManager().send_sms(message)
+            TwilioManager().send_sms(user_phone, message)
         return message
 
     def add_schedule(self, search, user_id = None, user_phone = None):

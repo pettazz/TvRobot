@@ -9,11 +9,13 @@ class TwilioManager:
         self.client = TwilioRestClient(TWILIO['ACCOUNT_SID'], TWILIO['AUTH_TOKEN'])
 
     def send_sms(self, to, body):
+        if not to.startswith('+1'):
+            to = "+1%s" % to
         if len(body) >= 159:
             self.send_sms(to, body[:155] + '...')
             if TWILIO['split_long_sms']:
                 self.send_sms(to, body[155:])
-        self.client.sms.messages.create(to="+1%s" % to,
+        self.client.sms.messages.create(to="%s" % to,
                                         from_=TWILIO['phone_number'],
                                         body=body)
 
