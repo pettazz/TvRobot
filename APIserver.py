@@ -54,7 +54,8 @@ class SMSAPIHandler(Resource):
             response_tag = '<Response><Sms>%s</Sms></Response>' % response
         else:
             response_tag = '<Response />'
-        return '<?xml version="1.0" encoding="UTF-8"?>' % response_tag
+            
+        return '<?xml version="1.0" encoding="UTF-8"?>%s' % response_tag
 
 class VoiceAPIHandler(Resource):
     def __init__(self):
