@@ -2,6 +2,7 @@ from twisted.web.server import Site
 from twisted.web.resource import Resource
 from twisted.internet import reactor
 
+import threading, uuid
 import json, urlparse
 
 from core.tvrobot import TvRobot
@@ -18,12 +19,30 @@ class SMSAPIHandler(Resource):
         response = None
         if msg_body.lower().startswith('add '):
             if msg_body.lower().startswith('add movie '):
-                TvRobot().add_download(download_type='Movie', search=msg_body[10:], user_phone=msg_from, send_sms=True)
                 # kick off a task that will need to remember to send an sms when it's finished
+                # we should probably have some loop cleaning up dead threads or something.
+                thread_name = "addmovie_%s" % uuid.uuid4().hex
+                t = threading.Thread(name=thread_name, target=TvRobot().add_download, kwargs={
+                    'download_type':'Movie', 
+                    'search':msg_body[10:], 
+                    'user_phone':msg_from, 
+                    'send_sms':True
+                })
+                print "starting worker thread %s" % thread_names
+                t.start()
 
             if msg_body.lower().startswith('add episode '):
-                TvRobot().add_download(download_type='Episode', search=msg_body[12:], user_phone=msg_from, send_sms=True)
                 # kick off a task that will need to remember to send an sms when it's finished
+                # we should probably have some loop cleaning up dead threads or something.
+                thread_name = "addepisode_%s" % uuid.uuid4().hex
+                t = threading.Thread(name=thread_name, target=TvRobot().add_download, kwargs={
+                    'download_type':'Episode', 
+                    'search':msg_body[12:], 
+                    'user_phone':msg_from, 
+                    'send_sms':True
+                })
+                print "starting worker thread %s" % thread_names
+                t.start()
 
             if msg_body.lower().startswith('add schedule tv '):
                 response = TvRobot().add_schedule(search=msg_body[16:], user_phone=msg_from)
