@@ -8,7 +8,7 @@ class TwilioManager:
     def __init__(self):
         self.client = TwilioRestClient(TWILIO['ACCOUNT_SID'], TWILIO['AUTH_TOKEN'])
 
-    def send_sms(to, body):
+    def send_sms(self, to, body):
         if len(body) >= 159:
             self.send_sms(to, body[:155] + '...')
             if TWILIO['split_long_sms']:
@@ -17,5 +17,5 @@ class TwilioManager:
                                         from_=TWILIO['phone_number'],
                                         body=body)
 
-    def send_sms_to_user(user_id, body):
+    def send_sms_to_user(self, user_id, body):
         self.send_sms(Usermanager().get_user_phone_by_id(user_id), body)
