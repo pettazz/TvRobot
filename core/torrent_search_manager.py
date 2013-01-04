@@ -58,7 +58,10 @@ class TorrentSearchManager:
             seeds = float(resultrow.find_element_by_xpath('.//td[3]').text)
             leechers = float(resultrow.find_element_by_xpath('.//td[4]').text)
             print "SE: %s; LE: %s" % (seeds, leechers)
-            ratio = seeds / leechers
+            if leechers == 0:
+                ratio = -1
+            else:
+                ratio = seeds / leechers
             if ratio > TVROBOT['torrent_ratio_threshold']:
                 print "ratio of %s is above threshold, downloading dat shit" % ratio
                 #this is janky because htmlunit cant get the href attr for some reason. 
