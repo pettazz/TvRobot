@@ -1,3 +1,4 @@
+import re
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from config import TVROBOT
@@ -23,6 +24,7 @@ class TorrentSearchManager:
 
     def get_magnet(self, search, media_type, sd_fallback = False):
         quality = 'HD'
+        search = re.sub('[^A-Z a-z0-9]+', '', search)
         rows = self._find_rows(search, media_type, quality)
         if rows is None and sd_fallback:
             quality = 'SD'
