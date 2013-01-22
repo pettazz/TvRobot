@@ -23,23 +23,23 @@ class TorrentSearchManager:
 
     def get_magnet(self, search, media_type, sd_fallback = False):
         quality = 'HD'
-        rows = self.find_rows(search, media_type, quality)
+        rows = self._find_rows(search, media_type, quality)
         if rows is None and sd_fallback:
             quality = 'SD'
-            rows = self.find_rows(search, media_type, quality)
+            rows = self._find_rows(search, media_type, quality)
         if rows:
             print "%s %s results found!" % (len(rows), quality)            
-            return self.get_best_row_magnet(rows)
+            return self._get_best_row_magnet(rows)
         else:
             return rows
 
-    def find_rows(self, search, media_type, quality):
+    def _find_rows(self, search, media_type, quality):
         self.driver.get(SEARCH_URL[media_type][quality] % search)
         page_loads.wait_for_element_present(self.driver, "p#footer", By.CSS_SELECTOR, 120)
         if page_interactions.is_text_visible(self.driver, 'No hits. Try adding an asterisk in you search phrase.', 'h2'):
             #sometimes TPB likes to strip apostrophes
             if search.find('\'') > -1:
-                again = self.find_rows(search.replace('\'', ''), media_type, quality)
+                again = self._find_rows(search.replace('\'', ''), media_type, quality)
                 if again:
                     return again
             print "No results found."
@@ -51,7 +51,7 @@ class TorrentSearchManager:
             rows = self.driver.find_elements_by_css_selector('table#searchResult tbody tr')
             return rows
 
-    def get_best_row_magnet(self, rows):
+    def _get_best_row_magnet(self, rows):
         print "checking torrent ratio..."
         done = None
         for resultrow in rows:
