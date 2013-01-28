@@ -115,7 +115,7 @@ class ScheduleManager:
                 print "none yet."
                 return None
             else:
-                if sdata['show_name'] == result[0] and sdata['timestamp'] > prev_stamp:
+                if sdata['timestamp'] > prev_stamp:
                     sdata['guid'] = guid
                     print "got an update. updating timestamp to %s" % sdata['timestamp']
                     query = """
