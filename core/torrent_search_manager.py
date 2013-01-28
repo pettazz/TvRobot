@@ -21,6 +21,7 @@ class TorrentSearchManager:
 
     def __init__(self, driver):
         self.driver = driver
+        self.page_loads = page_loads.PageLoads(self.driver)
 
     def get_magnet(self, search, media_type, sd_fallback = False):
         quality = 'HD'
@@ -37,7 +38,7 @@ class TorrentSearchManager:
 
     def _find_rows(self, search, media_type, quality):
         self.driver.get(SEARCH_URL[media_type][quality] % search)
-        page_loads.wait_for_element_present(self.driver, "p#footer", By.CSS_SELECTOR, 120)
+        self.page_loads.wait_for_element_present("p#footer", By.CSS_SELECTOR, 120)
         if page_interactions.is_text_visible(self.driver, 'No hits. Try adding an asterisk in you search phrase.', 'h2'):
             #sometimes TPB likes to strip apostrophes
             if search.find('\'') > -1:
