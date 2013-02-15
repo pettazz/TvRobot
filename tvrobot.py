@@ -7,7 +7,6 @@ import shutil
 import uuid
 import traceback
 import subprocess
-import hashlib
 
 from optparse import OptionParser, OptionValueError
 from selenium import webdriver
@@ -19,11 +18,15 @@ from core.transmission_manager import TransmissionManager
 
 import core.strings as strings
 import core.config as config
+from core.util import Util
 from core.mysql import DatabaseManager
 from core.lock_manager import LockManager
 from core.user_manager import UserManager
 from core.schedule_manager import ScheduleManager
 from core.torrent_search_manager import TorrentSearchManager
+
+#hackyhackhack
+from core.tvrobot import TvRobot as TvRobotCore
 
 class TvRobot:
 
@@ -38,42 +41,15 @@ class TvRobot:
         (opts, args) = o.parse_args()
         self.options = opts
 
-        #set dem loggings
-        if not os.path.exists(config.SELENIUM['log_path']):
-            os.mkdir(config.SELENIUM['log_path'])
-        if not os.path.exists(config.TVROBOT['log_path']):
-            os.mkdir(config.TVROBOT['log_path'])
+        self.util = Util()
+        self.robotcore = TvRobotCore()
 
         #start the selenium server if we need to and try to connect
         if not (self.options.clean_only or (self.options.add_torrent is not None) or (self.options.clean_ids is not None) or (self.options.add_magnet is not None)):
-            if config.SELENIUM['server'] == "localhost":
-                self.selenese = selenium_launcher.execute_selenium(
-                    config.SELENIUM['server'],
-                    config.SELENIUM['port'],
-                    config.SELENIUM['log_path'])
-
-            for x in range(config.SELENIUM['timeout']):
-                try:
-                    self.driver = webdriver.Remote("http://%s:%s/wd/hub"%
-                        (config.SELENIUM['server'], config.SELENIUM['port']),
-                        webdriver.DesiredCapabilities.HTMLUNIT)
-                    #self.driver = webdriver.Firefox()
-                    break
-                except:
-                    time.sleep(1)
-
-            if not hasattr(self, 'driver') or self.driver is None:
-                raise Exception (
-                "Couldn't connect to the selenium server at %s after %s seconds." %
-                (config.SELENIUM['server'], config.SELENIUM['timeout']))
-
-        print strings.HELLO
+            # the core bot will start selenium if it
+            # self.robotcore._start_selenium()
 
     def __del__(self):
-        try:
-            self.driver.quit()
-        except:
-            pass
 
         try:
             self.selenese.kill()
@@ -84,8 +60,6 @@ class TvRobot:
         """catch a ctrl-c and kill the program"""
         print strings.KILL_CAUGHT
         LockManager().unlock()
-        if hasattr(self, "driver"):
-            self.driver.quit()
         os.kill(os.getpid(), 9)
 
     def __create_parser(self):
@@ -113,8 +87,9 @@ class TvRobot:
         o.add_option("-s", "--search-only", action="store_true", dest="search_only",
         help="Searches for and adds any scheduled Episodes or Movies and exits. Does not clean up finished torrents.")
 
-        o.add_option("-a", "--add-torrent", action="store", default=None, dest="add_torrent",
-        help="Adds the specified torrent file and exits.")
+        # o.add_option("-a", "--add-torrent", action="store", default=None, dest="add_torrent",
+        # help="Adds the specified torrent file and exits.")
+        # Torrent files are deprecated. Use magnets.
 
         o.add_option("-m", "--add-magnet", action="store", default=None, dest="add_magnet",
         help="Adds the specified magnet URI and exits. This will usually have to be in quotes.")
@@ -186,41 +161,18 @@ class TvRobot:
         return result
 
     def __send_sms_completed(self, torrent):
-        query = """
-            SELECT U.phone, S.name FROM User U, Download D, Subscription S WHERE
-            D.transmission_id = %(torrent_id)s AND
-            S.Download = D.guid AND
-            U.id = S.User
-        """
-        result = DatabaseManager().fetchall_query_and_close(query, {'torrent_id': torrent.id})
-        if result is not None:
-            for res in result:
-                phone = res[0]
-                if res[1] is None:
-                    name = torrent.name
-                else:
-                    name = res[1]
-                TwilioManager().send_sms(phone, "BEEP. File's done: %s" % name)
+        self.robotcore.send_completed_sms_subscribers(torrent)
 
     def __add_subscription(self, download_guid, name = "", user = None):
-        guid = uuid.uuid4()
         if user is None:
             user_id = UserManager().get_user_id()
-        else:
-            user_id = user
-        query = """
-            INSERT INTO Subscription
-            (guid, User, Download, name)
-            VALUES
-            (%(guid)s, %(user_id)s, %(download_guid)s, %(name)s)
-        """
-        return DatabaseManager().execute_query_and_close(query, {'guid': guid, 'user_id': user_id, 'download_guid': download_guid, 'name': name})
+        self.robotcore.add_subscription(download_guid, user_id, name = "")
 
     def __unrar_file(self, file_path):
         print strings.UNRAR
         guid = str(uuid.uuid4().hex)
-        src_path = self.__shellquote("%s/%s" % (TransmissionManager().get_session().download_dir, file_path))
-        dest_path = self.__shellquote("%s/%s/" % (TransmissionManager().get_session().download_dir, guid))
+        src_path = self.util.shellquote("%s/%s" % (TransmissionManager().get_session().download_dir, file_path))
+        dest_path = self.util.shellquote("%s/%s/" % (TransmissionManager().get_session().download_dir, guid))
         try:
             if config.TVROBOT['completed_move_method'] == 'FABRIC':
                 subprocess.check_call("fab unrar_file:rar_path='%s',save_path='%s'" % (src_path, dest_path),
@@ -243,8 +195,8 @@ class TvRobot:
     def __unzip_file(self, file_path):
         print strings.UNZIP
         guid = str(uuid.uuid4().hex)
-        src_path = self.__shellquote("%s/%s" % (TransmissionManager().get_session().download_dir, file_path))
-        dest_path = self.__shellquote("%s/%s/" % (TransmissionManager().get_session().download_dir, guid))
+        src_path = self.util.shellquote("%s/%s" % (TransmissionManager().get_session().download_dir, file_path))
+        dest_path = self.util.shellquote("%s/%s/" % (TransmissionManager().get_session().download_dir, guid))
         try:
             if config.TVROBOT['completed_move_method'] == 'FABRIC':
                 subprocess.check_call("fab unzip_file:zip_path='%s',save_path='%s'" % (src_path, dest_path),
@@ -265,7 +217,7 @@ class TvRobot:
         return "%s/*" % guid
 
     def __delete_video_file(self, file_path):
-        file_path = self.__shellquote(file_path)
+        file_path = self.util.shellquote(file_path)
         try:
             if config.TVROBOT['completed_move_method'] == 'FABRIC':
                 #this isnt a check_call because a lot can go wrong here and its not mission critical
@@ -286,7 +238,7 @@ class TvRobot:
         remote_path = config.MEDIA['remote_path'][file_type]
         try:
             if config.TVROBOT['completed_move_method'] == 'FABRIC':
-                cmd = "fab move_video:local_path=\"%s\",remote_path=\"%s\"" % (self.__shellquote(file_path), remote_path)
+                cmd = "fab move_video:local_path=\"%s\",remote_path=\"%s\"" % (self.util.shellquote(file_path), remote_path)
                 subprocess.check_call(cmd,
                     stdout=open("%s/log_fabfileOutput.txt" % (config.TVROBOT['log_path']), "a"),
                     stderr=open("%s/log_fabfileError.txt" % (config.TVROBOT['log_path']), "a"),
@@ -309,24 +261,13 @@ class TvRobot:
             print strings.CAUGHT_EXCEPTION
             raise e
 
-    def __shellquote(self, s):
-        return s.replace(' ', '\ ').replace('(', '\(').replace(')', '\)').replace("'", "\\'").replace('&', '\&').replace(',', '\,').replace('!', '\!')
-
-    def __compare_passwords(self, given_password, existing_hash):
-        salt = existing_hash.split('$')[0]
-        hashed_password = self.__hash_password(given_password, salt)
-        return hashed_password == existing_hash
-
-    def __hash_password(self, password, salt=None):
-        if salt is None:
-            salt = str(uuid.uuid4().hex)
-        return "%s$%s" % (salt, hashlib.sha512(password + salt).hexdigest())
 
 
     ##############################
     # public methods
     ##############################
     def add_torrent(self, name = None):
+        # DEPRECATED - USE MAGNETS
         print strings.ADDING_TORRENT
         torrent_file = open(self.options.add_torrent, "rb").read().encode("base64")
         torrent = TransmissionManager().add(torrent_file)
@@ -349,29 +290,8 @@ class TvRobot:
         print strings.ADD_COMPLETED
 
     def add_magnet(self, magnet_link = None, download_type = None, name = None, user = None):
-        print strings.ADDING_MAGNET
-        if magnet_link is None:
-            magnet_link = self.options.add_magnet
-        if download_type is None:
-            download_type = self.options.add_torrent_type
-        torrent = TransmissionManager().add_uri(magnet_link)
-
-        print strings.ADDING_DOWNLOAD % download_type
-        guid = uuid.uuid4()
-        query = """
-            INSERT INTO Download
-            (guid, transmission_id, type)
-            VALUES
-            (%(guid)s, %(transmission_id)s, %(type)s)
-        """
-        DatabaseManager().execute_query_and_close(query, {
-            "guid": guid,
-            "transmission_id": torrent.keys()[0],
-            "type": download_type
-        })
-
+        guid = self.robotcore.add_magnet(magnet_link, download_type)
         self.__add_subscription(guid, name = name, user = user)
-        print strings.ADD_COMPLETED
 
     def clean_torrent(self, torrent):
         if torrent.progress == 100:
