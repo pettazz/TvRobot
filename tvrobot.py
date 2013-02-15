@@ -49,13 +49,6 @@ class TvRobot:
             # the core bot will start selenium if it
             # self.robotcore._start_selenium()
 
-    def __del__(self):
-
-        try:
-            self.selenese.kill()
-        except:
-            pass
-
     def __signal_catch_stop(self, signal, frame = None):
         """catch a ctrl-c and kill the program"""
         print strings.KILL_CAUGHT
