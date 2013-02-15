@@ -27,7 +27,7 @@ class TvRobot:
             os.mkdir(config.TVROBOT['log_path'])
 
         print strings.HELLO
-
+        
     def __del__(self):
         try:
             self.driver.quit()
