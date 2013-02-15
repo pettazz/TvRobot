@@ -44,11 +44,6 @@ class TvRobot:
         self.util = Util()
         self.robotcore = TvRobotCore()
 
-        #start the selenium server if we need to and try to connect
-        if not (self.options.clean_only or (self.options.add_torrent is not None) or (self.options.clean_ids is not None) or (self.options.add_magnet is not None)):
-            # the core bot will start selenium if it
-            # self.robotcore._start_selenium()
-
     def __signal_catch_stop(self, signal, frame = None):
         """catch a ctrl-c and kill the program"""
         print strings.KILL_CAUGHT
