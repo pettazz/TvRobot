@@ -21,6 +21,7 @@ class TransmissionManager:
         print strings.TRANSMISSION_REINDEXING_START
         torrents = TransmissionManager().list()
         print torrents
+        keep_torrents = []
         for torrent in torrents:
             download_name_hash = self.util.md5_string(torrent.name) 
             query = """
@@ -37,7 +38,11 @@ class TransmissionManager:
                     WHERE guid = '%(guid)s'
                 """
                 DatabaseManager().execute_query_and_close(query, {'guid': guid})
+                keep_torrents.append(guid)
             else:
                 print strings.UNRECOGNIZED_TORRENT % torrent.id
+
+        query = 'DELETE FROM Download WHERE guid NOT IN ("%s")' % ("','".join(keep_torrents))
+        DatabaseManager().execute_query_and_close(query, {})
 
         print strings.TRANSMISSION_REINDEXING_FINISH
