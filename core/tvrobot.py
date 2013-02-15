@@ -186,7 +186,7 @@ class TvRobot:
 
 
     def update_schedules(self, guids=None):
-        if guids is None or not type(guids) list:
+        if guids is None or not type(guids) == list:
             schedules = ScheduleManager().get_old_schedules()
         else:
             schedules = guids
