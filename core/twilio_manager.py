@@ -1,8 +1,8 @@
 from twilio.rest import TwilioRestClient
 
-from config import TWILIO
-from mysql import DatabaseManager
-from user_manager import UserManager
+from core.config import TWILIO
+from core.mysql import DatabaseManager
+from core.user_manager import UserManager
 
 class TwilioManager:
     def __init__(self):
