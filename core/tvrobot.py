@@ -165,6 +165,8 @@ class TvRobot:
 
     def add_scheduled_downloads(self):
         schedules = ScheduleManager().get_scheduled_tv()
+        if schedules:
+            self._start_selenium()
         for schedule in schedules:
             if schedule[10] == 1:
                 season_num = str(schedule[4]).zfill(2)
