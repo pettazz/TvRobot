@@ -28,6 +28,12 @@ class TvRobot:
 
         print strings.HELLO
 
+    def __del__(self):
+        try:
+            self.driver.quit()
+        except:
+            pass
+
     def _start_selenium(self):
         # config.SELENIUM['port'] replaced with '4445' for now to avoid colliding with the cron tvrobot tasks
         if not hasattr(self, 'driver') or self.driver is None:
