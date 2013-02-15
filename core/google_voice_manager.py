@@ -7,6 +7,9 @@ from mysql import DatabaseManager
 from user_manager import UserManager
 
 class GoogleVoiceManager:
+
+    ### This whole fucking thing is deprecated. The "API" is shit, and Twilio is infinitely better.
+
     def __init__(self):
         self.voice = Voice()
         self.voice.login(GOOGLE_VOICE['username'], GOOGLE_VOICE['password'])
