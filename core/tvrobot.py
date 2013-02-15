@@ -10,7 +10,7 @@ import core.config as config
 
 from core import selenium_launcher
 from core.mysql import DatabaseManager
-from core.lock_manager import LockManager
+from core.download_manager import DownloadManager
 from core.schedule_manager import ScheduleManager
 from core.transmission_manager import TransmissionManager
 from core.torrent_search_manager import TorrentSearchManager
@@ -200,3 +200,56 @@ class TvRobot:
                 """
                 DatabaseManager().execute_query_and_close(query, {'guid': schedule[0]})
                 TwilioManager().send_sms(phone, "Oh noes, looks like %s was cancelled. I had to delete it from my schedules. If this doesn't sound right, try adding it again." % download[1])
+
+
+    def cleanup_all_downloads(self):
+        torrents = TransmissionManager().list()
+        if ids is not None:
+            torrents = [torrents[num] for num in torrents if str(num) in ids]
+        else:
+            torrents = [torrents[num] for num in torrents]
+        print "I'm gonna try to beep these torrents: %s" % torrents
+        for torrent in torrents:
+            self.cleanup_download(torrent)
+
+    def cleanup_download(self, torrent):
+        if torrent.progress == 100:
+            video_type = DownloadManager().get_torrent_type(torrent.id)
+            if video_type in ('Episode', 'Movie'):
+                #single file
+                video_file_name = DownloadManager().get_video_file_path(TransmissionManager().get_files(torrent.id))
+                if video_file_name is not None and video_type is not None:
+                    video_path = "%s/%s" % (TransmissionManager().get_session().download_dir, video_file_name)
+                    print strings.MOVING_VIDEO_FILE % (video_type, video_file_name)
+                    DownloadManager().move_video_file(video_path, video_type)
+
+                    #if this was a decompress created folder, we want to delete the whole thing
+                    #otherwise we can count on transmission to delete it properly
+                    if video_path.endswith('/*'):
+                        print "DELETING GUID"
+                        file_path = video_path[:-2]
+                        DownloadManager().delete_video_file(file_path)
+                    TransmissionManager().remove(torrent.id, delete_data = True)
+                    print strings.DOWNLOAD_CLEAN_COMPLETED
+                    self.send_completed_sms_subscribers(torrent)
+                else:
+                    print strings.UNSUPPORTED_FILE_TYPE % torrent.id
+            elif video_type in ('Set', 'Season', 'Series'):
+                #some movies bro
+                video_files = DownloadManager().get_all_video_file_paths(TransmissionManager().get_files(torrent.id), kill_samples=("sample" not in torrent.name.lower()))
+                if video_files is not None and video_type is not None:
+                    for vidja in video_files:
+                        video_path = "%s/%s" % (TransmissionManager().get_session().download_dir, vidja)
+                        print strings.MOVING_VIDEO_FILE % (video_type, vidja)
+                        DownloadManager().move_video_file(video_path, video_type)
+                    TransmissionManager().remove(torrent.id, delete_data = True)
+                    print strings.DOWNLOAD_CLEAN_COMPLETED
+                    self.send_completed_sms_subscribers(torrent)
+                else:
+                    print strings.UNSUPPORTED_FILE_TYPE % torrent.id
+            elif video_type is not None:
+                print strings.UNSUPPORTED_DOWNLOAD_TYPE % torrent.id
+            else:
+                print strings.UNRECOGNIZED_TORRENT % torrent.id
+        else:
+            print strings.TORRENT_DOWNLOADING % torrent.id

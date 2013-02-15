@@ -6,6 +6,7 @@ import uuid
 import core.strings as strings
 import core.config as config
 from core.util import Util
+from core.mysql import DatabaseManager
 
 class DownloadManager:
     """ Provides methods for interacting with Downloads, mainly finding files and
@@ -158,3 +159,13 @@ class DownloadManager:
         except Exception, e:
             print strings.CAUGHT_EXCEPTION
             raise e
+
+    def get_torrent_type(self, torrent_id):
+        query = """
+            SELECT type FROM Download WHERE
+            transmission_id = %(torrent_id)s
+        """
+        result = DatabaseManager().fetchone_query_and_close(query, {'torrent_id': torrent_id})
+        if result is not None:
+            result = result[0]
+        return result
