@@ -472,9 +472,7 @@ class TvRobot:
 
 if __name__ == '__main__':
     robot = TvRobot()
-    if robot.options.add_torrent is not None:
-        robot.add_torrent()
-    elif robot.options.add_magnet is not None:
+    if robot.options.add_magnet is not None:
         robot.add_magnet()
     elif robot.options.clean_ids is not None:
         ids = [x.strip() for x in robot.options.clean_ids.split(',')]
