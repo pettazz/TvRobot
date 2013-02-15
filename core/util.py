@@ -16,7 +16,7 @@ class Util:
         return "%s$%s" % (salt, hashlib.sha512(password + salt).hexdigest())
 
     def md5_string(self, string):
-        return hashlib.md5(string).hexdigest())
+        return hashlib.md5(string).hexdigest()
         
 
 class XmlListConfig(list):
