@@ -83,7 +83,7 @@ class TvRobot:
         help="Adds the specified magnet URI and exits. This will usually have to be in quotes.")
 
         o.add_option("-t", "--torrent-type", action="store", default="Episode", dest="add_torrent_type", choices=("Movie", "Episode", "Series", "Season", "Set"),
-        help="Specify the type of torrent to add. One of: Movie, Episode (TV), Series (TV), Season (TV), Set(Movies)")
+        help="Specify the type of torrent to add. One of: Movie, Episode (TV), Series (TV), Season (TV), Set (Movies)")
 
         return o
 
@@ -250,33 +250,6 @@ class TvRobot:
             raise e
 
 
-
-    ##############################
-    # public methods
-    ##############################
-    def add_torrent(self, name = None):
-        # DEPRECATED - USE MAGNETS
-        print strings.ADDING_TORRENT
-        torrent_file = open(self.options.add_torrent, "rb").read().encode("base64")
-        torrent = TransmissionManager().add(torrent_file)
-
-        print strings.ADDING_DOWNLOAD % self.options.add_torrent_type
-        guid = uuid.uuid4()
-        query = """
-            INSERT INTO Download
-            (guid, transmission_id, type)
-            VALUES
-            (%(guid)s, %(transmission_id)s, %(type)s)
-        """
-        DatabaseManager().execute_query_and_close(query, {
-            "guid": guid,
-            "transmission_id": torrent.keys()[0],
-            "type": self.options.add_torrent_type
-        })
-
-        self.__add_subscription(guid, name)
-        print strings.ADD_COMPLETED
-
     def add_magnet(self, magnet_link = None, download_type = None, name = None, user = None):
         guid = self.robotcore.add_magnet(magnet_link, download_type)
         self.__add_subscription(guid, name = name, user = user)
@@ -358,80 +331,6 @@ class TvRobot:
                     DatabaseManager().execute_query_and_close(query, {'guid': download[0]})
                     TwilioManager().send_sms(phone, "Oh noes, looks like %s was cancelled. I had to delete it from my schedules. If this doesn't sound right, try adding it again." % download[1])
 
-        finally:
-            LockManager().unlock(lock_guid)
-
-    def run_sms_schedules(self):
-        ######################################################
-        ### DEPRECATED - USE core.tvrobot.TvRobot FOR THIS
-        #######################################################
-        lock_guid = LockManager().set_lock('sms_schedules')
-        try:
-            sms_schedules = GoogleVoiceManager().get_new_schedule_messages()
-            for sch in sms_schedules:
-                if sch['type'] == 'TV':
-                    #print sch
-                    did = ScheduleManager().add_scheduled_episode(sch)
-                    if did is not None:
-                        print "added %s as %s" % (sch['name'], did['guid'])
-                        if 'timestamp' in did.keys() and did['timestamp'] is not None:
-                            diff = int(did['timestamp']) - time.time()
-                            days, remainder = divmod(diff, 86400)
-                            hours = remainder / 3600
-                            if days > 0:
-                                timestr = "Next episode is on in %s day(s), %s hour(s)" % (int(days), int(hours))
-                            else:
-                                timestr = "Next episode is on in %s hour(s)" % int(hours)
-                        else:
-                            timestr = ""
-                        GoogleVoiceManager().send_message(sch['phone'], "Ok, I added a schedule for %s. %s" % (did['show_name'], timestr))
-                    else:
-                        print "Couldn't find a currently airing show called %s " % sch['name']
-                        GoogleVoiceManager().send_message(sch['phone'], "Couldn't find a currently airing show called %s " % sch['name'])
-                elif sch['type'] == 'MOVIE':
-                    print "No movies yet."
-                    #ScheduleManager().add_scheduled_movie(sch)
-                else:
-                    print "I dunno wat dat shit be."
-        finally:
-            LockManager().unlock(lock_guid)
-
-    def run_on_demand_movies(self):
-        ######################################################
-        ### DEPRECATED - USE core.tvrobot.TvRobot FOR THIS
-        #######################################################
-        lock_guid = LockManager().set_lock('add_ondemand')
-        try:
-            #add any newly requested movies to the db
-            sms_movies = GoogleVoiceManager().get_on_demand_movies()
-            for mov in sms_movies:
-                #phone, user, sms_guid, search
-                query = """
-                    INSERT INTO OnDemandSMS
-                    (guid, sms_guid, User, search)
-                    VALUES (%(guid)s, %(sms_guid)s, %(user)s, %(search)s)
-                """
-                guid = uuid.uuid4()
-                DatabaseManager().execute_query_and_close(query, {'guid': guid, 'user': mov['user'], 'sms_guid': mov['sms_guid'], 'search': mov['search']})
-                GoogleVoiceManager().send_message(mov['phone'], "Remembering to look for %s. I'll let you know when I find it." % mov['search'])
-
-            #search for any movies that haven't been successfully added yet
-            waiting_movies = []
-            query = "SELECT * FROM OnDemandSMS WHERE added = 0"
-            waiting_movies = DatabaseManager().fetchall_query_and_close(query, {})
-            for mov in waiting_movies:
-                print "Beeeep, searching for %s" % mov[3]
-                magnet = TorrentSearchManager(self.driver).get_magnet(mov[3], 'Movie', True)
-                if magnet:
-                    self.add_magnet(magnet, 'Movie', name = mov[3], user = mov[2])
-                    query = """
-                        UPDATE OnDemandSMS SET
-                        added = 1 WHERE guid = %(guid)s
-                    """
-                    DatabaseManager().execute_query_and_close(query, {'guid': mov[0]})
-                    GoogleVoiceManager().send_message(UserManager().get_user_phone_by_id(mov[2]), "Downloading %s. I'll let you know when it's done." % mov[3])
-                else:
-                    print "couldn't find a good one. trying again later."
         finally:
             LockManager().unlock(lock_guid)
 
