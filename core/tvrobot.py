@@ -4,6 +4,8 @@ import uuid
 
 from selenium import webdriver
 import transmissionrpc
+frm transmissionrpc.error import TransmissionError
+
 
 import core.strings as strings
 import core.config as config
@@ -126,20 +128,34 @@ class TvRobot:
 
     def add_magnet(self, magnet_link, download_type):
         print strings.ADDING_MAGNET
-        torrent = TransmissionManager().add_uri(magnet_link)
+        try:
+            torrent = TransmissionManager().add_uri(magnet_link)
+            query = """
+                SELECT guid FROM Download WHERE
+                transmission_id = %(torrent_id)s
+            """
+            result = DatabaseManager().fetchone_query_and_close(query, {'torrent_id': torrent.keys()[0]})
+            if result is not None:
+                TransmissionManager().reindex_torrents()
+        except TransmissionError, e:
+            # probably due to duplicate torrent trying to be added, TODO: handle this somehow
+            # https://github.com/pettazz/TvRobot/issues/19
+            raise e
 
         print strings.ADDING_DOWNLOAD % download_type
         guid = uuid.uuid4()
+        name_hash = self.util.md5_string(torrent.name)
         query = """
             INSERT INTO Download
-            (guid, transmission_id, type)
+            (guid, transmission_id, type, download_name_hash)
             VALUES
-            (%(guid)s, %(transmission_id)s, %(type)s)
+            (%(guid)s, %(transmission_id)s, %(type)s, %(name_hash)s)
         """
         DatabaseManager().execute_query_and_close(query, {
             "guid": guid,
             "transmission_id": torrent.keys()[0],
-            "type": download_type
+            "type": download_type,
+            "name_hash": name_hash
         })
         print strings.ADD_COMPLETED
         return guid
