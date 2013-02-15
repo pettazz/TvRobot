@@ -4,7 +4,7 @@ import uuid
 
 from selenium import webdriver
 import transmissionrpc
-frm transmissionrpc.error import TransmissionError
+from transmissionrpc.error import TransmissionError
 
 
 import core.strings as strings
