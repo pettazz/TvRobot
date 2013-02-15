@@ -1,4 +1,20 @@
 import xml.etree.cElementTree as ElementTree
+import hashlib, uuid
+
+class Util:
+    def shellquote(self, s):
+        return s.replace(' ', '\ ').replace('(', '\(').replace(')', '\)').replace("'", "\\'").replace('&', '\&').replace(',', '\,').replace('!', '\!')
+
+    def compare_passwords(self, given_password, existing_hash):
+        salt = existing_hash.split('$')[0]
+        hashed_password = self.hash_password(given_password, salt)
+        return hashed_password == existing_hash
+
+    def hash_password(self, password, salt=None):
+        if salt is None:
+            salt = str(uuid.uuid4().hex)
+        return "%s$%s" % (salt, hashlib.sha512(password + salt).hexdigest())
+        
 
 class XmlListConfig(list):
     def __init__(self, aList):
