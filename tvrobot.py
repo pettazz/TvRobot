@@ -468,6 +468,7 @@ class TvRobot:
                         # ScheduleManager().update_schedule(download[0])
                     else:
                         print "couldn't find a good one. trying again later."
+                        ScheduleManager().update_schedule(download[0])
         finally:
             LockManager().unlock(lock_guid)
 
