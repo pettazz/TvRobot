@@ -1,29 +1,15 @@
 import os
-import time
 import logging
-import math
-import getpass
-import shutil
-import uuid
-import traceback
-import subprocess
 
 from optparse import OptionParser, OptionValueError
-from selenium import webdriver
-import transmissionrpc
-from core import selenium_launcher
-from core.google_voice_manager import GoogleVoiceManager
 from core.twilio_manager import TwilioManager
 from core.transmission_manager import TransmissionManager
 
 import core.strings as strings
 import core.config as config
-from core.util import Util
 from core.mysql import DatabaseManager
 from core.lock_manager import LockManager
 from core.user_manager import UserManager
-from core.schedule_manager import ScheduleManager
-from core.torrent_search_manager import TorrentSearchManager
 
 #hackyhackhack
 from core.tvrobot import TvRobot as TvRobotCore
@@ -41,7 +27,6 @@ class TvRobot:
         (opts, args) = o.parse_args()
         self.options = opts
 
-        self.util = Util()
         self.robotcore = TvRobotCore()
 
     def __signal_catch_stop(self, signal, frame = None):
@@ -87,56 +72,10 @@ class TvRobot:
 
         return o
 
-    def __get_video_file_path(self, files):
-        max_size = 0
-        file_id = None
-        decompress = False
-        for torrent_id in files:
-            print strings.FINDING_VIDEO_FILE % torrent_id
-            for f in files[torrent_id]:
-                if "sample" not in files[torrent_id][f]['name'].lower() \
-                    and "trailer" not in files[torrent_id][f]['name'].lower() \
-                    and "bonus features" not in files[torrent_id][f]['name'].lower():
-                    ext = files[torrent_id][f]['name'].rsplit('.', 1)[1]
-                    if ext in config.FILETYPES['video'] and files[torrent_id][f]['size'] > max_size:
-                        decompress = False
-                        max_size = files[torrent_id][f]['size']
-                        file_name = files[torrent_id][f]['name']
-                    elif ext in config.FILETYPES['compressed'] and files[torrent_id][f]['size'] > max_size:
-                        if ext == 'zip':
-                            decompress = 'zip'
-                            max_size = files[torrent_id][f]['size']
-                            file_name = files[torrent_id][f]['name']
-                        elif ext == 'rar':
-                            decompress = 'rar'
-                            max_size = files[torrent_id][f]['size']
-                            file_name = files[torrent_id][f]['name']
-                        else:
-                            return None
-        if decompress == 'rar':
-            file_name = self.__unrar_file(file_name)
-        if decompress == 'zip':
-            file_name = self.__unzip_file(file_name)
-        return file_name
 
-    def __get_all_video_file_paths(self, files, kill_samples = True):
-        videos = []
-        for torrent_id in files:
-            print strings.FINDING_VIDEO_FILE % torrent_id
-            for f in files[torrent_id]:
-                ext = files[torrent_id][f]['name'].rsplit('.', 1)[1]
-                if ext in config.FILETYPES['video'] and (files[torrent_id][f]['selected']):
-                    if kill_samples:
-                        if "sample" not in files[torrent_id][f]['name'].lower() and "trailer" not in files[torrent_id][f]['name'].lower():
-                            videos.append(files[torrent_id][f]['name'])
-                    else:
-                        videos.append(files[torrent_id][f]['name'])
-                elif ext in config.FILETYPES['compressed']:
-                    raise Exception("I NEVER THOUGHT THIS WOULD HAPPEN OH GOD WHAT KIND OF A SICK MIND DOES THIS??")
-        if len(videos) > 0:
-            return videos
-        else:
-            return None
+
+
+
 
     def __get_torrent_type(self, torrent_id):
         query = """
@@ -147,112 +86,6 @@ class TvRobot:
         if result is not None:
             result = result[0]
         return result
-
-    def __send_sms_completed(self, torrent):
-        self.robotcore.send_completed_sms_subscribers(torrent)
-
-    def __add_subscription(self, download_guid, name = "", user = None):
-        if user is None:
-            user_id = UserManager().get_user_id()
-        self.robotcore.add_subscription(download_guid, user_id, name = "")
-
-    def __unrar_file(self, file_path):
-        print strings.UNRAR
-        guid = str(uuid.uuid4().hex)
-        src_path = self.util.shellquote("%s/%s" % (TransmissionManager().get_session().download_dir, file_path))
-        dest_path = self.util.shellquote("%s/%s/" % (TransmissionManager().get_session().download_dir, guid))
-        try:
-            if config.TVROBOT['completed_move_method'] == 'FABRIC':
-                subprocess.check_call("fab unrar_file:rar_path='%s',save_path='%s'" % (src_path, dest_path),
-                    stdout=open("%s/log_fabfileOutput.txt" % (config.TVROBOT['log_path']), "a"),
-                    stderr=open("%s/log_fabfileError.txt" % (config.TVROBOT['log_path']), "a"),
-                    shell=True)
-            elif config.TVROBOT['completed_move_method'] == 'LOCAL':
-                subprocess.check_call("mkdir %s; unrar e %s %s" % (dest_path, src_path, dest_path),
-                    stdout=open("%s/log_localfileOutput.txt" % (config.TVROBOT['log_path']), "a"),
-                    stderr=open("%s/log_localfileError.txt" % (config.TVROBOT['log_path']), "a"),
-                    shell=True)
-            else:
-                print "FIX YER CONF. I ONLY KNOW FABRIC AND LOCAL."
-        except Exception, e:
-            print strings.CAUGHT_EXCEPTION
-            raise e
-
-        return "%s/*" % guid
-
-    def __unzip_file(self, file_path):
-        print strings.UNZIP
-        guid = str(uuid.uuid4().hex)
-        src_path = self.util.shellquote("%s/%s" % (TransmissionManager().get_session().download_dir, file_path))
-        dest_path = self.util.shellquote("%s/%s/" % (TransmissionManager().get_session().download_dir, guid))
-        try:
-            if config.TVROBOT['completed_move_method'] == 'FABRIC':
-                subprocess.check_call("fab unzip_file:zip_path='%s',save_path='%s'" % (src_path, dest_path),
-                    stdout=open("%s/log_fabfileOutput.txt" % (config.TVROBOT['log_path']), "a"),
-                    stderr=open("%s/log_fabfileError.txt" % (config.TVROBOT['log_path']), "a"),
-                    shell=True)
-            elif config.TVROBOT['completed_move_method'] == 'LOCAL':
-                subprocess.check_call("mkdir %s; unzip %s -d %s" % (dest_path, src_path, dest_path),
-                    stdout=open("%s/log_localfileOutput.txt" % (config.TVROBOT['log_path']), "a"),
-                    stderr=open("%s/log_localfileError.txt" % (config.TVROBOT['log_path']), "a"),
-                    shell=True)
-            else:
-                print "FIX YER CONF. I ONLY KNOW FABRIC AND LOCAL."
-        except Exception, e:
-            print strings.CAUGHT_EXCEPTION
-            raise e
-
-        return "%s/*" % guid
-
-    def __delete_video_file(self, file_path):
-        file_path = self.util.shellquote(file_path)
-        try:
-            if config.TVROBOT['completed_move_method'] == 'FABRIC':
-                #this isnt a check_call because a lot can go wrong here and its not mission critical
-                subprocess.call("fab delete_file:remote_path=\"%s\"" % (file_path),
-                    stdout=open("%s/log_fabfileOutput.txt" % (config.TVROBOT['log_path']), "a"),
-                    stderr=open("%s/log_fabfileError.txt" % (config.TVROBOT['log_path']), "a"),
-                    shell=True)
-            elif config.TVROBOT['completed_move_method'] == 'LOCAL':
-                shutil.rmtree(file_path, True)
-            else:
-                print "FIX YER CONF. I ONLY KNOW FABRIC AND LOCAL."
-        except Exception, e:
-            print strings.CAUGHT_EXCEPTION
-            raise e
-
-    def __move_video_file(self, file_path, file_type):
-        video_name = file_path.rsplit('/', 1)[1]
-        remote_path = config.MEDIA['remote_path'][file_type]
-        try:
-            if config.TVROBOT['completed_move_method'] == 'FABRIC':
-                cmd = "fab move_video:local_path=\"%s\",remote_path=\"%s\"" % (self.util.shellquote(file_path), remote_path)
-                subprocess.check_call(cmd,
-                    stdout=open("%s/log_fabfileOutput.txt" % (config.TVROBOT['log_path']), "a"),
-                    stderr=open("%s/log_fabfileError.txt" % (config.TVROBOT['log_path']), "a"),
-                    shell=True)
-            elif config.TVROBOT['completed_move_method'] == 'LOCAL':
-                if file_path.endswith('*'):
-                    path = file_path.split('*')[0]
-                    for f in os.listdir(path):
-                        if f.rsplit('.', 1)[1] in config.FILETYPES['video']:
-                            m_file = "%s%s" % (path, f)
-                            print "copying %s file: %s" % (f.rsplit('.', 1)[1], f)
-                            shutil.copy(m_file, remote_path)
-                        else:
-                            print "skipping %s file: %s" % (f.rsplit('.', 1)[1], f)
-                else:
-                    shutil.copy(file_path, remote_path)
-            else:
-                print "FIX YER CONF. I ONLY KNOW FABRIC AND LOCAL."
-        except Exception, e:
-            print strings.CAUGHT_EXCEPTION
-            raise e
-
-
-    def add_magnet(self, magnet_link = None, download_type = None, name = None, user = None):
-        guid = self.robotcore.add_magnet(magnet_link, download_type)
-        self.__add_subscription(guid, name = name, user = user)
 
     def clean_torrent(self, torrent):
         if torrent.progress == 100:
@@ -310,63 +143,32 @@ class TvRobot:
         finally:
             LockManager().unlock(lock_guid)
 
+
+    ################################################################################################
+    #   updated methods
+    ################################################################################################
+
     def search(self):
-        #self.run_on_demand_movies()
         self.run_update_schedules()
-        #self.run_sms_schedules()
         self.run_schedule_search()
 
     def run_update_schedules(self):
-        lock_guid = LockManager().set_lock('update_schedules')
-        try:
-            tv_downloads = ScheduleManager().get_old_schedules()
-            for download in tv_downloads:
-                updated = ScheduleManager().update_schedule(download[0])
-                if updated == False:
-                    phone = UserManager().get_user_phone_by_id(download[9])
-                    query = """
-                        DELETE FROM EpisodeSchedule
-                        WHERE guid = %(guid)s
-                    """
-                    DatabaseManager().execute_query_and_close(query, {'guid': download[0]})
-                    TwilioManager().send_sms(phone, "Oh noes, looks like %s was cancelled. I had to delete it from my schedules. If this doesn't sound right, try adding it again." % download[1])
-
-        finally:
-            LockManager().unlock(lock_guid)
+        self.robotcore.update_schedules()
 
     def run_schedule_search(self):
-        lock_guid = LockManager().set_lock('schedule_search')
-        try:
-            tv_downloads = ScheduleManager().get_scheduled_tv()
-            for download in tv_downloads:
-                if download[10] == 1:
-                    season_num = str(download[4]).zfill(2)
-                    episode_num = str(download[5]).zfill(2)
-                    search_str = "%s S%sE%s" % (download[1], season_num, episode_num)
-                    print "Beeeep, searching for %s" % search_str
-                    magnet = TorrentSearchManager(self.driver).get_magnet(search_str, 'Episode', (download[7] == 0))
-                    if magnet:
-                        self.add_magnet(magnet, 'Episode', name = search_str, user = download[9])
-                        query = """
-                            UPDATE EpisodeSchedule SET
-                            new = 0 WHERE guid = %(guid)s
-                        """
-                        DatabaseManager().execute_query_and_close(query, {'guid': download[0]})
-                        # ScheduleManager().update_schedule(download[0])
-                    else:
-                        print "couldn't find a good one. trying again later."
-                        ScheduleManager().update_schedule(download[0])
-        finally:
-            LockManager().unlock(lock_guid)
+        self.robotcore.add_scheduled_downloads()
 
-        """lock_guid = LockManager().set_lock('sms_search')
-        try:
-            sms_downloads = GoogleVoiceManager().get_new_download_messages()
-            for download in sms_downloads:
-                print "Not yet."
-        finally:
-            LockManager().unlock(lock_guid)"""
+    def add_magnet(self, magnet_link = None, download_type = None, name = None, user = None):
+        guid = self.robotcore.add_magnet(magnet_link, download_type)
+        self.__add_subscription(guid, name = name, user = user)
 
+    def __send_sms_completed(self, torrent):
+        self.robotcore.send_completed_sms_subscribers(torrent)
+
+    def __add_subscription(self, download_guid, name = "", user = None):
+        if user is None:
+            user_id = UserManager().get_user_id()
+        self.robotcore.add_subscription(download_guid, user_id, name = "")
 
 
 if __name__ == '__main__':
@@ -382,8 +184,6 @@ if __name__ == '__main__':
         robot.clean_torrents()
     elif robot.options.schedule_updates_only:
         robot.run_update_schedules()
-    #elif robot.options.sms_updates_only:
-    #    ronot.run_sms_schedules()
     elif robot.options.download_schedules_only:
         robot.run_schedule_search()
     else:

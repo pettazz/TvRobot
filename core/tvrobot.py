@@ -27,7 +27,7 @@ class TvRobot:
             os.mkdir(config.TVROBOT['log_path'])
 
         print strings.HELLO
-        
+
     def __del__(self):
         try:
             self.driver.quit()
@@ -60,6 +60,7 @@ class TvRobot:
                 (config.SELENIUM['server'], config.SELENIUM['timeout']))
         else:
             print "selenium driver already initialized"
+
 
     def add_download(self, download_type, search, user_id = None, user_phone = None, send_sms = False):
         if user_id is None:
@@ -144,6 +145,7 @@ class TvRobot:
         print strings.ADD_COMPLETED
         return guid
 
+
     def send_completed_sms_subscribers(self, torrent):
         query = """
             SELECT U.phone, S.name FROM User U, Download D, Subscription S WHERE
@@ -160,3 +162,41 @@ class TvRobot:
                 else:
                     name = res[1]
                 TwilioManager().send_sms(phone, "BEEP. File's done: %s" % name)
+
+
+    def add_scheduled_downloads(self):
+        schedules = ScheduleManager().get_scheduled_tv()
+        for schedule in schedules:
+            if schedule[10] == 1:
+                season_num = str(schedule[4]).zfill(2)
+                episode_num = str(schedule[5]).zfill(2)
+                search_str = "%s S%sE%s" % (schedule[1], season_num, episode_num)
+                print "Beeeep, searching for %s" % search_str
+                magnet = TorrentSearchManager(self.driver).get_magnet(search_str, 'Episode', (schedule[7] == 0))
+                if magnet:
+                    self.add_magnet(magnet, 'Episode', name = search_str, user = schedule[9])
+                    query = """
+                        UPDATE EpisodeSchedule SET
+                        new = 0 WHERE guid = %(guid)s
+                    """
+                    DatabaseManager().execute_query_and_close(query, {'guid': schedule[0]})
+                else:
+                    print "couldn't find a good one. trying again later."
+                    ScheduleManager().update_schedule(schedule[0])
+
+
+    def update_schedules(self, guids=None):
+        if guids is None or not type(guids) list:
+            schedules = ScheduleManager().get_old_schedules()
+        else:
+            schedules = guids
+        for schedule in schedules:
+            updated = ScheduleManager().update_schedule(schedule[0])
+            if updated == False:
+                phone = UserManager().get_user_phone_by_id(schedule[9])
+                query = """
+                    DELETE FROM EpisodeSchedule
+                    WHERE guid = %(guid)s
+                """
+                DatabaseManager().execute_query_and_close(query, {'guid': schedule[0]})
+                TwilioManager().send_sms(phone, "Oh noes, looks like %s was cancelled. I had to delete it from my schedules. If this doesn't sound right, try adding it again." % download[1])
