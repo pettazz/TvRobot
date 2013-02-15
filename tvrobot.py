@@ -85,7 +85,7 @@ class TvRobot:
     def clean_torrents(self, ids=None):
         lock_guid = LockManager().set_lock('clean')
         try:
-            self.robotcore.cleanup_all_downloads()
+            self.robotcore.cleanup_downloads()
         finally:
             LockManager().unlock(lock_guid)
 
