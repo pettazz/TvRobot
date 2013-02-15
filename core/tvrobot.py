@@ -203,7 +203,7 @@ class TvRobot:
                 TwilioManager().send_sms(phone, "Oh noes, looks like %s was cancelled. I had to delete it from my schedules. If this doesn't sound right, try adding it again." % download[1])
 
 
-    def cleanup_all_downloads(self):
+    def cleanup_downloads(self, ids=None):
         torrents = TransmissionManager().list()
         if ids is not None:
             torrents = [torrents[num] for num in torrents if str(num) in ids]
