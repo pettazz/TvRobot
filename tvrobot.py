@@ -14,6 +14,7 @@ from selenium import webdriver
 import transmissionrpc
 from core import selenium_launcher
 from core.google_voice_manager import GoogleVoiceManager
+from core.twilio_manager import TwilioManager
 from core.transmission_manager import TransmissionManager
 
 import core.strings as strings
@@ -102,8 +103,9 @@ class TvRobot:
         o.add_option("-u", "--schedule-updates-only", action="store_true", dest="schedule_updates_only",
         help="Attempts to update any existing schedules and then exits.")
 
-        o.add_option("-x", "--sms-update-only", action="store_true", dest="sms_updates_only",
-        help="Attempts to add any newly received sms schedules and then exits.")
+        # o.add_option("-x", "--sms-update-only", action="store_true", dest="sms_updates_only",
+        # help="Attempts to add any newly received sms schedules and then exits.")
+        # This action is deprecated through this API, the new core.tvrobot.TvRobot class handles this
 
         o.add_option("-p", "--download-schedules-only", action="store_true", dest="download_schedules_only",
         help="Attempts to find and download any torrents by schedules and then exits.")
@@ -198,7 +200,7 @@ class TvRobot:
                     name = torrent.name
                 else:
                     name = res[1]
-                GoogleVoiceManager().send_message(phone, "BEEP. File's done: %s" % name)
+                TwilioManager().send_sms(phone, "BEEP. File's done: %s" % name)
 
     def __add_subscription(self, download_guid, name = "", user = None):
         guid = uuid.uuid4()
@@ -428,9 +430,9 @@ class TvRobot:
             LockManager().unlock(lock_guid)
 
     def search(self):
-        self.run_on_demand_movies()
+        #self.run_on_demand_movies()
         self.run_update_schedules()
-        self.run_sms_schedules()
+        #self.run_sms_schedules()
         self.run_schedule_search()
 
     def run_update_schedules(self):
@@ -446,12 +448,15 @@ class TvRobot:
                         WHERE guid = %(guid)s
                     """
                     DatabaseManager().execute_query_and_close(query, {'guid': download[0]})
-                    GoogleVoiceManager().send_message(phone, "Oh noes, looks like %s was cancelled. I had to delete it from my schedules. If this doesn't sound right, try adding it again." % download[1])
+                    TwilioManager().send_sms(phone, "Oh noes, looks like %s was cancelled. I had to delete it from my schedules. If this doesn't sound right, try adding it again." % download[1])
 
         finally:
             LockManager().unlock(lock_guid)
 
     def run_sms_schedules(self):
+        ######################################################
+        ### DEPRECATED - USE core.tvrobot.TvRobot FOR THIS
+        #######################################################
         lock_guid = LockManager().set_lock('sms_schedules')
         try:
             sms_schedules = GoogleVoiceManager().get_new_schedule_messages()
@@ -484,6 +489,9 @@ class TvRobot:
             LockManager().unlock(lock_guid)
 
     def run_on_demand_movies(self):
+        ######################################################
+        ### DEPRECATED - USE core.tvrobot.TvRobot FOR THIS
+        #######################################################
         lock_guid = LockManager().set_lock('add_ondemand')
         try:
             #add any newly requested movies to the db
@@ -568,8 +576,8 @@ if __name__ == '__main__':
         robot.clean_torrents()
     elif robot.options.schedule_updates_only:
         robot.run_update_schedules()
-    elif robot.options.sms_updates_only:
-        ronot.run_sms_schedules()
+    #elif robot.options.sms_updates_only:
+    #    ronot.run_sms_schedules()
     elif robot.options.download_schedules_only:
         robot.run_schedule_search()
     else:
