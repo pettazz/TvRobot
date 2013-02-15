@@ -14,6 +14,9 @@ class Util:
         if salt is None:
             salt = str(uuid.uuid4().hex)
         return "%s$%s" % (salt, hashlib.sha512(password + salt).hexdigest())
+
+    def md5_string(self, string):
+        return hashlib.md5(string).hexdigest())
         
 
 class XmlListConfig(list):
