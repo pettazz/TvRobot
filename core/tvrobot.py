@@ -84,7 +84,7 @@ class TvRobot:
         elif magnet is False:
             message = "BOOEEP. The Pirate Bay is overloaded. Try again later."
         else:
-            guid = self.add_magnet(magnet, download_type)
+            guid, name = self.add_magnet(magnet, download_type)
             self.add_subscription(guid, user_id, search)
             message = "BEEP. Downloading %s." % search
             
@@ -162,7 +162,7 @@ class TvRobot:
             "type": download_type
         })
         print strings.ADD_COMPLETED
-        return guid
+        return guid, torrent._getNameString()
 
 
     def send_completed_sms_subscribers(self, torrent):

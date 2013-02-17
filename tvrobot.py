@@ -78,11 +78,11 @@ class TvRobot:
     def run_schedule_search(self):
         self.robotcore.add_scheduled_downloads()
 
-    def add_magnet(self, magnet_link = None, download_type = None, name = None, user = None):
+    def add_magnet(self, magnet_link = None, download_type = None, user = None):
         magnet_link = self.options.add_magnet
         download_type = self.options.add_torrent_type
         user = UserManager().get_user_id()
-        guid = self.robotcore.add_magnet(magnet_link, download_type)
+        guid, name = self.robotcore.add_magnet(magnet_link, download_type)
         self.add_subscription(guid, name = name, user = user)
 
     def clean_torrents(self, ids=None):
