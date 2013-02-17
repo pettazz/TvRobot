@@ -140,7 +140,7 @@ class TvRobot:
             """
             result = DatabaseManager().fetchone_query_and_close(query, {'transmission_guid': torrent_hash})
             if result is not None:
-                raise TransmissionError('Duplicate torrent')
+                raise Exception('Torrent already exists in Download Database')
                 # same error as below
         except TransmissionError, e:
             # probably due to duplicate torrent trying to be added, TODO: handle this somehow
