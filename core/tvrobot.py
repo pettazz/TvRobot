@@ -136,9 +136,9 @@ class TvRobot:
             torrent_hash = torrent.hashString
             query = """
                 SELECT guid FROM Download WHERE
-                transmission_guid = %(torrent_guid)s
+                transmission_guid = %(transmission_guid)s
             """
-            result = DatabaseManager().fetchone_query_and_close(query, {'torrent_guid': torrent_hash})
+            result = DatabaseManager().fetchone_query_and_close(query, {'transmission_guid': torrent_hash})
             if result is not None:
                 raise TransmissionError('Duplicate torrent')
                 # same error as below
@@ -168,11 +168,11 @@ class TvRobot:
     def send_completed_sms_subscribers(self, torrent):
         query = """
             SELECT U.phone, S.name FROM User U, Download D, Subscription S WHERE
-            D.transmission_guid = %(torrent_guid)s AND
+            D.transmission_guid = %(transmission_guid)s AND
             S.Download = D.guid AND
             U.id = S.User
         """
-        result = DatabaseManager().fetchall_query_and_close(query, {'torrent_guid': torrent.hashString})
+        result = DatabaseManager().fetchall_query_and_close(query, {'transmission_guid': torrent.hashString})
         if result is not None:
             for res in result:
                 phone = res[0]
