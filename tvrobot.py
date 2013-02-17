@@ -79,6 +79,9 @@ class TvRobot:
         self.robotcore.add_scheduled_downloads()
 
     def add_magnet(self, magnet_link = None, download_type = None, name = None, user = None):
+        magnet_link = self.options.add_magnet
+        download_type = self.options.add_torrent_type
+        user = UserManager().get_user_id()
         guid = self.robotcore.add_magnet(magnet_link, download_type)
         self.add_subscription(guid, name = name, user = user)
 
@@ -98,8 +101,8 @@ class TvRobot:
 
     def add_subscription(self, download_guid, name = "", user = None):
         if user is None:
-            user_id = UserManager().get_user_id()
-        self.robotcore.add_subscription(download_guid, user_id, name = "")
+            user = UserManager().get_user_id()
+        self.robotcore.add_subscription(download_guid, user, name = "")
 
 
 if __name__ == '__main__':
