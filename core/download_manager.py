@@ -161,12 +161,12 @@ class DownloadManager:
             print strings.CAUGHT_EXCEPTION
             raise e
 
-    def get_torrent_type(self, torrent_guid):
+    def get_torrent_type(self, transmission_guid):
         query = """
             SELECT type FROM Download WHERE
-            torrent_guid = %(torrent_guid)s
+            transmission_guid = %(transmission_guid)s
         """
-        result = DatabaseManager().fetchone_query_and_close(query, {'torrent_guid': torrent_guid})
+        result = DatabaseManager().fetchone_query_and_close(query, {'transmission_guid': transmission_guid})
         if result is not None:
             result = result[0]
         return result
