@@ -163,6 +163,8 @@ class DownloadManager:
 
     def get_torrent_type(self, name):
         name_hash = Util().md5_string(name)
+        print name
+        print name_hash
         query = """
             SELECT type FROM Download WHERE
             name_hash = %(name_hash)s
