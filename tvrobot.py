@@ -102,7 +102,7 @@ class TvRobot:
     def add_subscription(self, download_guid, name = "", user = None):
         if user is None:
             user = UserManager().get_user_id()
-        self.robotcore.add_subscription(download_guid, user, name = "")
+        self.robotcore.add_subscription(download_guid, user, name)
 
 
 if __name__ == '__main__':
