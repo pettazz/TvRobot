@@ -161,15 +161,12 @@ class DownloadManager:
             print strings.CAUGHT_EXCEPTION
             raise e
 
-    def get_torrent_type(self, name):
-        name_hash = Util().md5_string(name)
-        print name
-        print name_hash
+    def get_torrent_type(self, torrent_guid):
         query = """
             SELECT type FROM Download WHERE
-            name_hash = %(name_hash)s
+            torrent_guid = %(torrent_guid)s
         """
-        result = DatabaseManager().fetchone_query_and_close(query, {'name_hash': name_hash})
+        result = DatabaseManager().fetchone_query_and_close(query, {'torrent_guid': torrent_guid})
         if result is not None:
             result = result[0]
         return result

@@ -71,7 +71,3 @@ ADDING_TORRENT = "beep beep. Starting to download this torrent."
 ADDING_MAGNET = "bzzzzzeeeeep Adding this magnet before it kills me."
 ADDING_DOWNLOAD = "beeboop. Remembering to clean this %s download up later."
 ADD_COMPLETED = "Beeped the new torrent."
-
-TRANSMISSION_REINDEXING_START = "BOOBEEDEEDOOP My torrents list was messed up. Re-indexing them all now."
-TRANSMISSION_REINDEXING_TORRENT = "beeoop updating download %s with new transmission id %s"
-TRANSMISSION_REINDEXING_FINISH = "beebeep. Torrent index restored."

@@ -31,6 +31,8 @@ class TvRobot:
 
         print strings.HELLO
 
+        
+
     def __del__(self):
         try:
             self.driver.quit()
@@ -131,16 +133,14 @@ class TvRobot:
         print strings.ADDING_MAGNET
         try:
             torrent = TransmissionManager().add_torrent(magnet_link)
-            name_hash = Util().md5_string(torrent._getNameString())
-            print torrent._getNameString()
-            print name_hash
+            torrent_hash = torrent.hashString
             query = """
                 SELECT guid FROM Download WHERE
-                name_hash = %(name_hash)s
+                transmission_guid = %(torrent_guid)s
             """
-            result = DatabaseManager().fetchone_query_and_close(query, {'name_hash': name_hash})
+            result = DatabaseManager().fetchone_query_and_close(query, {'torrent_guid': torrent_hash})
             if result is not None:
-                raise Exception('Download already exists in the database')
+                raise TransmissionError('Duplicate torrent')
                 # same error as below
         except TransmissionError, e:
             # probably due to duplicate torrent trying to be added, TODO: handle this somehow
@@ -152,14 +152,14 @@ class TvRobot:
         
         query = """
             INSERT INTO Download
-            (guid, type, name_hash)
+            (guid, transmission_guid, type)
             VALUES
-            (%(guid)s, %(type)s, %(name_hash)s)
+            (%(guid)s, %(transmission_guid)s, %(type)s)
         """
         DatabaseManager().execute_query_and_close(query, {
             "guid": guid,
-            "type": download_type,
-            "name_hash": name_hash
+            "transmission_guid": torrent_hash,
+            "type": download_type
         })
         print strings.ADD_COMPLETED
         return guid
@@ -168,12 +168,11 @@ class TvRobot:
     def send_completed_sms_subscribers(self, torrent):
         query = """
             SELECT U.phone, S.name FROM User U, Download D, Subscription S WHERE
-            D.name_hash = %(name_hash)s AND
+            D.transmission_guid = %(torrent_guid)s AND
             S.Download = D.guid AND
             U.id = S.User
         """
-        name_hash = Util().md5_string(torrent.name)
-        result = DatabaseManager().fetchall_query_and_close(query, {'name_hash': name_hash})
+        result = DatabaseManager().fetchall_query_and_close(query, {'torrent_guid': torrent.hashString})
         if result is not None:
             for res in result:
                 phone = res[0]
@@ -236,7 +235,7 @@ class TvRobot:
 
     def cleanup_download(self, torrent):
         if torrent.progress == 100:
-            video_type = DownloadManager().get_torrent_type(torrent.name)
+            video_type = DownloadManager().get_torrent_type(torrent.hashString)
             if video_type in ('Episode', 'Movie'):
                 #single file
                 video_file_name = DownloadManager().get_video_file_path(TransmissionManager().get_files(torrent.id))
