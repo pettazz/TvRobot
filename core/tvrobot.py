@@ -132,6 +132,8 @@ class TvRobot:
         try:
             torrent = TransmissionManager().add_torrent(magnet_link)
             name_hash = Util().md5_string(torrent._getNameString())
+            print torrent._getNameString()
+            print name_hash
             query = """
                 SELECT guid FROM Download WHERE
                 name_hash = %(name_hash)s
