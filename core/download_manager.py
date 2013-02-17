@@ -7,6 +7,7 @@ import core.strings as strings
 import core.config as config
 from core.util import Util
 from core.mysql import DatabaseManager
+from core.transmission_manager import TransmissionManager
 
 class DownloadManager:
     """ Provides methods for interacting with Downloads, mainly finding files and
@@ -160,12 +161,13 @@ class DownloadManager:
             print strings.CAUGHT_EXCEPTION
             raise e
 
-    def get_torrent_type(self, torrent_id):
+    def get_torrent_type(self, name):
+        name_hash = Util().md5_string(torrent.name)
         query = """
             SELECT type FROM Download WHERE
-            transmission_id = %(torrent_id)s
+            name_hash = %(name_hash)s
         """
-        result = DatabaseManager().fetchone_query_and_close(query, {'torrent_id': torrent_id})
+        result = DatabaseManager().fetchone_query_and_close(query, {'name_hash': name_hash})
         if result is not None:
             result = result[0]
         return result

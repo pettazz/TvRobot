@@ -234,7 +234,7 @@ class TvRobot:
 
     def cleanup_download(self, torrent):
         if torrent.progress == 100:
-            video_type = DownloadManager().get_torrent_type(torrent.id)
+            video_type = DownloadManager().get_torrent_type(torrent.name)
             if video_type in ('Episode', 'Movie'):
                 #single file
                 video_file_name = DownloadManager().get_video_file_path(TransmissionManager().get_files(torrent.id))
