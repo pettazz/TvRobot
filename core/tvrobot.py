@@ -195,7 +195,8 @@ class TvRobot:
                 print "Beeeep, searching for %s" % search_str
                 magnet = TorrentSearchManager(self.driver).get_magnet(search_str, 'Episode', (schedule[7] == 0))
                 if magnet:
-                    self.add_magnet(magnet, 'Episode', name = search_str, user = schedule[9])
+                    guid, torrent_name = self.add_magnet(magnet, 'Episode')
+                    self.add_subscription(guid, schedule[9], search_str)
                     query = """
                         UPDATE EpisodeSchedule SET
                         new = 0 WHERE guid = %(guid)s
