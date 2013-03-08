@@ -6,3 +6,4 @@ requests
 selenium==2.15
 transmissionrpc==0.9.0
 --editable git+git://github.com/pettazz/pygooglevoice.git#egg=pygooglevoice
+twilio
