@@ -242,7 +242,7 @@ class TvRobot:
                 video_file_name = DownloadManager().get_video_file_path(TransmissionManager().get_files(torrent.id))
                 if video_file_name is not None and video_type is not None:
                     video_path = "%s/%s" % (TransmissionManager().get_session().download_dir, video_file_name)
-                    print strings.MOVING_VIDEO_FILE % (video_type, video_file_name)
+                    print strings.MOVING_VIDEO_FILE % (video_type, video_file_name.encode('ascii', 'ignore'))
                     DownloadManager().move_video_file(video_path, video_type)
 
                     #if this was a decompress created folder, we want to delete the whole thing
@@ -262,7 +262,7 @@ class TvRobot:
                 if video_files is not None and video_type is not None:
                     for vidja in video_files:
                         video_path = "%s/%s" % (TransmissionManager().get_session().download_dir, vidja)
-                        print strings.MOVING_VIDEO_FILE % (video_type, vidja)
+                        print strings.MOVING_VIDEO_FILE % (video_type, vidja.endcode('ascii', 'ignore'))
                         DownloadManager().move_video_file(video_path, video_type)
                     TransmissionManager().remove(torrent.id, delete_data = True)
                     print strings.DOWNLOAD_CLEAN_COMPLETED
