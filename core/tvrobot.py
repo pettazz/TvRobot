@@ -262,7 +262,7 @@ class TvRobot:
                 if video_files is not None and video_type is not None:
                     for vidja in video_files:
                         video_path = "%s/%s" % (TransmissionManager().get_session().download_dir, vidja)
-                        print strings.MOVING_VIDEO_FILE % (video_type, vidja.endcode('ascii', 'ignore'))
+                        print strings.MOVING_VIDEO_FILE % (video_type, vidja.encode('ascii', 'ignore'))
                         DownloadManager().move_video_file(video_path, video_type)
                     TransmissionManager().remove(torrent.id, delete_data = True)
                     print strings.DOWNLOAD_CLEAN_COMPLETED
