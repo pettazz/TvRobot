@@ -53,15 +53,19 @@ class DownloadManager:
         for torrent_id in files:
             print strings.FINDING_VIDEO_FILE % torrent_id
             for f in files[torrent_id]:
-                ext = files[torrent_id][f]['name'].rsplit('.', 1)[1]
-                if ext in config.FILETYPES['video'] and (files[torrent_id][f]['selected']):
-                    if kill_samples:
-                        if "sample" not in files[torrent_id][f]['name'].lower() and "trailer" not in files[torrent_id][f]['name'].lower():
-                            videos.append(files[torrent_id][f]['name'])
-                    else:
+                if kill_samples and ("sample" not in files[torrent_id][f]['name'].lower() and "trailer" not in files[torrent_id][f]['name'].lower()):
+                    ext = files[torrent_id][f]['name'].rsplit('.', 1)[1]
+                    if ext in config.FILETYPES['video'] and (files[torrent_id][f]['selected']):
                         videos.append(files[torrent_id][f]['name'])
-                elif ext in config.FILETYPES['compressed']:
-                    raise Exception("I NEVER THOUGHT THIS WOULD HAPPEN OH GOD WHAT KIND OF A SICK MIND DOES THIS??")
+                    elif ext in config.FILETYPES['compressed'] and (files[torrent_id][f]['selected']):
+                        if ext == 'rar':
+                            done = self.unrar_file(files[torrent_id][f]['name'])
+                            videos.append(files[torrent_id][f]['name'])
+                        elif ext == 'zip':
+                            done = self.unzip_file(files[torrent_id][f]['name'])
+                            videos.append(files[torrent_id][f]['name'])
+                        else:
+                            raise Exception(strings.UNSUPPORTED_FILE_TYPE % files[torrent_id])
         if len(videos) > 0:
             return videos
         else:
