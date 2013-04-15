@@ -177,7 +177,6 @@ class DownloadManager:
             D.transmission_guid = %(transmission_guid)s AND E.guid = D.EpisodeSchedule
         """
         result = DatabaseManager().fetchone_query_and_close(query, {'transmission_guid': transmission_guid})
-        print result
         return result
 
     def get_torrent_type(self, transmission_guid):
