@@ -151,10 +151,11 @@ class ScheduleManager:
             sdata['sms_guid'] = data['sms_guid']
             sdata['user_id'] = user
             sdata['new'] = int(sdata['timestamp'] > 0)
+            sdata['schedule_method'] = data['schedule_method']
             query = """
                 INSERT INTO EpisodeSchedule
-                (guid, show_name, tvrage_show_id, duration, season_number, episode_number, timestamp, sms_guid, User, new)
-                VALUES (%(guid)s, %(show_name)s, %(tvrage_show_id)s, %(duration)s, %(season)s, %(episode)s, %(timestamp)s, %(sms_guid)s, %(user_id)s, %(new)s)
+                (guid, show_name, tvrage_show_id, duration, season_number, episode_number, timestamp, sms_guid, User, new, schedule_method)
+                VALUES (%(guid)s, %(show_name)s, %(tvrage_show_id)s, %(duration)s, %(season)s, %(episode)s, %(timestamp)s, %(sms_guid)s, %(user_id)s, %(new)s, %(schedule_method)s)
             """
             DatabaseManager().execute_query_and_close(query, sdata)
             return sdata

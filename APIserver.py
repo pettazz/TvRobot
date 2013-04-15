@@ -47,6 +47,10 @@ class SMSAPIHandler(Resource):
             if msg_body.lower().startswith('add schedule tv '):
                 response = TvRobot().add_schedule(search=msg_body[16:], user_phone=msg_from)
                 #hopefully TVRage responds in well under 15s, so we won't hit the timeout on this task
+
+            if msg_body.lower().startswith('add schedule by date tv '):
+                response = TvRobot().add_schedule(search=msg_body[16:], user_phone=msg_from, by_date=True)
+                #hopefully TVRage responds in well under 15s, so we won't hit the timeout on this task
         elif msg_body.lower() == 'cleanup':
             thread_name = "cleanup_%s" % uuid.uuid4().hex
             t = threading.Thread(name=thread_name, target=TvRobot().cleanup_downloads())

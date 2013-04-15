@@ -92,12 +92,16 @@ class TvRobot:
             TwilioManager().send_sms(user_phone, message)
         return message
 
-    def add_schedule(self, search, user_id = None, user_phone = None):
+    def add_schedule(self, search, user_id = None, user_phone = None, by_date = False):
         if user_id is None:
             user_id = UserManager().get_user_id_by_phone(user_phone)
 
         print "Beeeep, searching TVRage for %s" % search
-        sch = {'name': search, 'phone': user_phone, 'sms_guid': 'lolnah'} #sms_guid is here for backwards compatibility 
+        if by_date:
+            sch_method = 'DATE'
+        else:
+            sch_method = 'EPNUM'
+        sch = {'name': search, 'phone': user_phone, 'sms_guid': 'lolnah', 'schedule_method': sch_method} #sms_guid is here for backwards compatibility 
         did = ScheduleManager().add_scheduled_episode(sch)
         if did is not None:
             print "added %s as %s" % (sch['name'], did['guid'])
