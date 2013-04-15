@@ -164,7 +164,7 @@ class TvRobot:
             "guid": guid,
             "transmission_guid": torrent_hash,
             "type": download_type, 
-            "EpisodeSchedule": schedule_id
+            "EpisodeSchedule": schedule_guid
         })
         print strings.ADD_COMPLETED
         return guid, torrent._getNameString()
