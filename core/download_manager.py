@@ -141,7 +141,7 @@ class DownloadManager:
         video_name = file_path.rsplit('/', 1)[1]
         if showname:
             remote_path = config.MEDIA['remote_path'][file_type] + showname
-            cmd = "fab verify_dir:path=\"%s\"" % (self.util.shellquote(self.util.shellquote(remote_path))
+            cmd = "fab verify_dir:path=\"%s\"" % (self.util.shellquote(remote_path))
             subprocess.check_call(cmd,
                 stdout=open("%s/log_fabfileOutput.txt" % (config.TVROBOT['log_path']), "a"),
                 stderr=open("%s/log_fabfileError.txt" % (config.TVROBOT['log_path']), "a"),
