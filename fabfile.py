@@ -9,6 +9,11 @@ env.hosts = [config.TRANSMISSION['SSH']['user'] + '@' + \
              str(config.TRANSMISSION['SSH']['port'])]
 env.password = config.TRANSMISSION['SSH']['password']
 
+def verify_dir(path):
+    path = __shellquote(path)
+    cmd = 'test -d %s || mkdir %s' % (remote_path, remote_path)
+    run(cmd)
+
 def move_video(local_path, remote_path):
     local_path = __shellquote(local_path)
     remote_path = __shellquote(remote_path)

@@ -236,14 +236,20 @@ class TvRobot:
 
     def cleanup_download(self, torrent):
         if torrent.progress == 100:
-            video_type = DownloadManager().get_torrent_type(torrent.hashString)
+            schedule_data = DownloadManager().get_schedule_data(torrent.hashString)
+            if schedule_data:
+                video_type = 'Episode'
+                showname = schedule_data['show_name']
+            else:
+                video_type = DownloadManager().get_torrent_type(torrent.hashString)
+                showname = None
             if video_type in ('Episode', 'Movie'):
                 #single file
                 video_file_name = DownloadManager().get_video_file_path(TransmissionManager().get_files(torrent.id))
                 if video_file_name is not None and video_type is not None:
                     video_path = "%s/%s" % (TransmissionManager().get_session().download_dir, video_file_name)
                     print strings.MOVING_VIDEO_FILE % (video_type, video_file_name.encode('ascii', 'ignore'))
-                    DownloadManager().move_video_file(video_path, video_type)
+                    DownloadManager().move_video_file(video_path, video_type, showname)
 
                     #if this was a decompress created folder, we want to delete the whole thing
                     #otherwise we can count on transmission to delete it properly

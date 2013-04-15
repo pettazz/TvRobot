@@ -137,12 +137,18 @@ class DownloadManager:
             print strings.CAUGHT_EXCEPTION
             raise e
 
-    def move_video_file(self, file_path, file_type):
+    def move_video_file(self, file_path, file_type, showame=None):
         video_name = file_path.rsplit('/', 1)[1]
-        remote_path = config.MEDIA['remote_path'][file_type]
+        if showname:
+            remote_path = config.MEDIA['remote_path'][file_type] + showname
+            cmd = "fab verify_dir:path=\"%s\"" % (self.util.shellquote(self.util.shellquote(remote_path))
+            subprocess.check_call(cmd,
+                stdout=open("%s/log_fabfileOutput.txt" % (config.TVROBOT['log_path']), "a"),
+                stderr=open("%s/log_fabfileError.txt" % (config.TVROBOT['log_path']), "a"),
+                shell=True)
         try:
             if config.TVROBOT['completed_move_method'] == 'FABRIC':
-                cmd = "fab move_video:local_path=\"%s\",remote_path=\"%s\"" % (self.util.shellquote(file_path), remote_path)
+                cmd = "fab move_video:local_path=\"%s\",remote_path=\"%s\"" % (self.util.shellquote(file_path), self.util.shellquote(remote_path))
                 subprocess.check_call(cmd,
                     stdout=open("%s/log_fabfileOutput.txt" % (config.TVROBOT['log_path']), "a"),
                     stderr=open("%s/log_fabfileError.txt" % (config.TVROBOT['log_path']), "a"),
@@ -164,6 +170,16 @@ class DownloadManager:
         except Exception, e:
             print strings.CAUGHT_EXCEPTION
             raise e
+
+    def get_schedule_data(self, transmission_guid):
+        query = """
+            SELECT * FROM Download WHERE
+            transmission_guid = %(transmission_guid)s
+        """
+        result = DatabaseManager().fetchone_query_and_close(query, {'transmission_guid': transmission_guid})
+        if result is not None:
+            result = result[0]
+        return result
 
     def get_torrent_type(self, transmission_guid):
         query = """
