@@ -11,7 +11,7 @@ env.password = config.TRANSMISSION['SSH']['password']
 
 def verify_dir(path):
     path = __shellquote(path)
-    cmd = 'test -d %s || mkdir %s' % (remote_path, remote_path)
+    cmd = 'test -d %s || mkdir %s' % (path, path)
     run(cmd)
 
 def move_video(local_path, remote_path):

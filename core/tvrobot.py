@@ -133,7 +133,7 @@ class TvRobot:
         return DatabaseManager().execute_query_and_close(query, 
             {'guid': guid, 'user_id': user_id, 'download_guid': download_guid, 'name': name})
 
-    def add_magnet(self, magnet_link, download_type):
+    def add_magnet(self, magnet_link, download_type, schedule_guid = None):
         print strings.ADDING_MAGNET
         try:
             torrent = TransmissionManager().add_torrent(magnet_link)
@@ -156,14 +156,15 @@ class TvRobot:
         
         query = """
             INSERT INTO Download
-            (guid, transmission_guid, type)
+            (guid, transmission_guid, type, EpisodeSchedule)
             VALUES
-            (%(guid)s, %(transmission_guid)s, %(type)s)
+            (%(guid)s, %(transmission_guid)s, %(type)s, %(EpisodeSchedule)s)
         """
         DatabaseManager().execute_query_and_close(query, {
             "guid": guid,
             "transmission_guid": torrent_hash,
-            "type": download_type
+            "type": download_type, 
+            "EpisodeSchedule": schedule_id
         })
         print strings.ADD_COMPLETED
         return guid, torrent._getNameString()
@@ -199,7 +200,7 @@ class TvRobot:
                 print "Beeeep, searching for %s" % search_str
                 magnet = TorrentSearchManager(self.driver).get_magnet(search_str, 'Episode', (schedule[7] == 0))
                 if magnet:
-                    guid, torrent_name = self.add_magnet(magnet, 'Episode')
+                    guid, torrent_name = self.add_magnet(magnet, 'Episode', schedule[0])
                     self.add_subscription(guid, schedule[9], search_str)
                     query = """
                         UPDATE EpisodeSchedule SET
@@ -243,7 +244,7 @@ class TvRobot:
             schedule_data = DownloadManager().get_schedule_data(torrent.hashString)
             if schedule_data:
                 video_type = 'Episode'
-                showname = schedule_data['show_name']
+                showname = schedule_data[1]
             else:
                 video_type = DownloadManager().get_torrent_type(torrent.hashString)
                 showname = None

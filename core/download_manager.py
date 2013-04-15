@@ -137,10 +137,10 @@ class DownloadManager:
             print strings.CAUGHT_EXCEPTION
             raise e
 
-    def move_video_file(self, file_path, file_type, showame=None):
+    def move_video_file(self, file_path, file_type, showname=None):
         video_name = file_path.rsplit('/', 1)[1]
         if showname:
-            remote_path = config.MEDIA['remote_path'][file_type] + showname
+            remote_path = "%s/%s" % (config.MEDIA['remote_path'][file_type], showname)
             cmd = "fab verify_dir:path=\"%s\"" % (self.util.shellquote(remote_path))
             subprocess.check_call(cmd,
                 stdout=open("%s/log_fabfileOutput.txt" % (config.TVROBOT['log_path']), "a"),
@@ -173,12 +173,11 @@ class DownloadManager:
 
     def get_schedule_data(self, transmission_guid):
         query = """
-            SELECT * FROM Download WHERE
-            transmission_guid = %(transmission_guid)s
+            SELECT E.* FROM EpisodeSchedule E, Download D WHERE
+            D.transmission_guid = %(transmission_guid)s AND E.guid = D.EpisodeSchedule
         """
         result = DatabaseManager().fetchone_query_and_close(query, {'transmission_guid': transmission_guid})
-        if result is not None:
-            result = result[0]
+        print result
         return result
 
     def get_torrent_type(self, transmission_guid):
