@@ -179,7 +179,6 @@ class TvRobot:
         """
         result = DatabaseManager().fetchall_query_and_close(query, {'transmission_guid': torrent.hashString})
         if result is not None:
-            print result
             for res in result:
                 phone = res[0]
                 if res[1] is None:
@@ -187,8 +186,6 @@ class TvRobot:
                 else:
                     name = res[1]
                 TwilioManager().send_sms(phone, "BEEP. File's done: %s" % name)
-        else:
-            print "no phone number found"
 
 
     def add_scheduled_downloads(self):
