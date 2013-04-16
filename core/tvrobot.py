@@ -200,7 +200,7 @@ class TvRobot:
                     search_str = "%s S%sE%s" % (schedule[1], season_num, episode_num)
                 elif schedule[11] == 'DATE':
                     sch_time = datetime.datetime.fromtimestamp(int(schedule[6]))
-                    search_str = "%s %s" % (schedule[1], time.strftime(sch_time, "%Y %m %d"))
+                    search_str = "%s %s" % (schedule[1], time.strftime("%Y %m %d", sch_time))
                 else:
                     raise Exception(strings.UNSUPPORTED_SCHEDULE_TYPE % schedule[10])
                 print "Beeeep, searching for %s" % search_str
