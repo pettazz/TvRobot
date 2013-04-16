@@ -63,6 +63,7 @@ MOVING_VIDEO_FILE = u"beep beep bopping %s file `%s`..."
 UNRECOGNIZED_TORRENT = u"Booeep. Do I know you? Skipping torrent # %s"
 TORRENT_DOWNLOADING = u"Boop. This one is still working. Skipping torrent # %s"
 UNSUPPORTED_DOWNLOAD_TYPE = u"Beeeeeeeooooppppp I can't do these kinds of downloads yet. :( Skipping torrent # %s"
+UNSUPPORTED_SCHEDULE_TYPE = u"beepboop %s is an unknown schedule type"
 UNSUPPORTED_FILE_TYPE = u"I don't know how to beep boop this kind of download yet. Skipping torrent # %s"
 
 DOWNLOAD_CLEAN_COMPLETED = "beep. File's done."

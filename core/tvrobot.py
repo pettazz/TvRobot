@@ -1,5 +1,5 @@
 import os
-import time
+import time, datetime
 import uuid
 
 from selenium import webdriver
@@ -194,9 +194,15 @@ class TvRobot:
             self._start_selenium()
         for schedule in schedules:
             if schedule[10] == 1:
-                season_num = str(schedule[4]).zfill(2)
-                episode_num = str(schedule[5]).zfill(2)
-                search_str = "%s S%sE%s" % (schedule[1], season_num, episode_num)
+                if schedule[11] == 'EPNUM':
+                    season_num = str(schedule[4]).zfill(2)
+                    episode_num = str(schedule[5]).zfill(2)
+                    search_str = "%s S%sE%s" % (schedule[1], season_num, episode_num)
+                elif schedule[11] == 'DATE':
+                    sch_time = datetime.datetime.fromtimestamp(int(schedule[6]))
+                    search_str = "%s %s" % (schedule[1], time.strftime(sch_time, "%Y %m %d"))
+                else:
+                    raise Exception(strings.UNSUPPORTED_SCHEDULE_TYPE % schedule[10])
                 print "Beeeep, searching for %s" % search_str
                 magnet = TorrentSearchManager(self.driver).get_magnet(search_str, 'Episode', (schedule[7] == 0))
                 if magnet:
