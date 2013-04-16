@@ -146,6 +146,8 @@ class DownloadManager:
                 stdout=open("%s/log_fabfileOutput.txt" % (config.TVROBOT['log_path']), "a"),
                 stderr=open("%s/log_fabfileError.txt" % (config.TVROBOT['log_path']), "a"),
                 shell=True)
+        else:
+            remote_path = config.MEDIA['remote_path'][file_type]
         try:
             if config.TVROBOT['completed_move_method'] == 'FABRIC':
                 cmd = "fab move_video:local_path=\"%s\",remote_path=\"%s\"" % (self.util.shellquote(file_path), self.util.shellquote(remote_path))
