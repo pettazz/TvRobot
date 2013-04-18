@@ -7,3 +7,4 @@ twisted
 twilio
 selenium
 transmissionrpc==0.8.0
+elementtree
