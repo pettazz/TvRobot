@@ -17,6 +17,7 @@ class SMSAPIHandler(Resource):
         msg_to = data['To'][0]
         msg_body = data['Body'][0]
         response = None
+        
         if msg_body.lower().startswith('add '):
             if msg_body.lower().startswith('add movie '):
                 # kick off a task that will need to remember to send an sms when it's finished
@@ -51,17 +52,21 @@ class SMSAPIHandler(Resource):
             if msg_body.lower().startswith('add schedule by date tv '):
                 response = TvRobot().add_schedule(search=msg_body[16:], user_phone=msg_from, by_date=True)
                 #hopefully TVRage responds in well under 15s, so we won't hit the timeout on this task
+                
         elif msg_body.lower() == 'cleanup':
             thread_name = "cleanup_%s" % uuid.uuid4().hex
             t = threading.Thread(name=thread_name, target=TvRobot().cleanup_downloads())
             print "starting worker thread %s" % thread_name
             t.start()
             response = "Beep, cleaning up active downloads."
+
         elif msg_body.lower().startswith('sup'):
             # TODO: allow him to give some simple status updates here
             response = "Just bein' a tvrobot, doin' tvrobot things."
-        elif msg_body.lower() == 'cleanup':
-            response = 
+
+        elif msg_body.lower() == 'ping':
+            response = "pong"
+
         else:
             response = "Booeep. I don't know what that means."
 
