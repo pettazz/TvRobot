@@ -57,6 +57,11 @@ class SMSAPIHandler(Resource):
             print "starting worker thread %s" % thread_name
             t.start()
             response = "Beep, cleaning up active downloads."
+        elif msg_body.lower().startswith('sup'):
+            # TODO: allow him to give some simple status updates here
+            response = "Just bein' a tvrobot, doin' tvrobot things."
+        elif msg_body.lower() == 'cleanup':
+            response = 
         else:
             response = "Booeep. I don't know what that means."
 
