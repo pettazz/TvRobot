@@ -13,6 +13,7 @@ TZ_OFFSET = TVRAGE['tz_offset']
 ACTIVE_SHOW_STATUS = ['Returning Series', 'New Series', 'Final Season']
 
 TVRAGE_API_URL = ('http://services.tvrage.com/myfeeds/episodeinfo.php?key=%s' % TVRAGE['api_key']) + '&show=%s'
+TVRAGE_EPISODE_API = 'http://services.tvrage.com/feeds/episodeinfo.php?show=%s&ep=%sx%s&key=' + TVRAGE['api_key']
 
 class ScheduleManager:
 
