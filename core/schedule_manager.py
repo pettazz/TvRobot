@@ -66,6 +66,44 @@ class ScheduleManager:
             print "BEEP BEEEEEP TVRAGE IS DOWN(%s)" % response.status_code
         return data
 
+    def __get_episode_data(self, name, season, episode):
+        data = {'season': None, 'episode': None, 'timestamp': None}
+        try:
+            response = requests.get(TVRAGE_EPISODE_API % (name.replace(' ', '%20'), season, episode))
+        except:
+            print "BEEP. TVRage isn't responding to our request for this one, we'll have to try again later."
+            return data
+        if response.status_code == requests.codes['\o/']:
+            root = ElementTree.XML(response.text.encode('ascii', 'ignore'))
+            rdata = XmlDictConfig(root)
+            print rdata
+            if 'status' in rdata.keys() and rdata['status'] in ACTIVE_SHOW_STATUS:
+                if 'episode' not in rdata.keys():
+                    # handle this better
+                    print "BOOP. Can't find episode info for %s S%sE%s." % (name, season, episode)
+                    return data
+
+                if rdata['episode']['number'] == "%sx%s" % (str(season).zfill(2), str(episode).zfill(2)):
+                    data['season'] = season
+                    data['episode'] = episode
+                    # EPAPI doesnt have timestamps HOORAY
+                    timestring = "%s %s" % (rdata['episode']['airdate'], rdata['airtime'])
+                    timestamp = int(datetime.datetime.strptime(timestring, '%Y-%m-%d %A at %I:%M %p').strftime("%s"))
+                    data['timestamp'] = timestamp - TZ_OFFSET
+                    data['duration'] = int(rdata['runtime']) * 60
+                    data['show_name'] = rdata['name']
+                else:
+                    # handle this better
+                    print "BOOP. Can't find the next episode of %s." % name
+                    return data
+
+            else:
+                print "ended"
+                return False
+        else:
+            print "BEEP BEEEEEP TVRAGE IS DOWN(%s)" % response.status_code
+        return data
+
     def __get_next_episode(self, name):
         data = {'season': None, 'episode': None, 'timestamp': None}
         try:
@@ -148,17 +186,20 @@ class ScheduleManager:
         result = DatabaseManager().fetchall_query_and_close(query, {'now': now})
         return result
 
-    def update_schedule(self, guid):
+    def update_schedule(self, guid, next_episode = True):
         query = """
             SELECT show_name, season_number, episode_number, duration, timestamp FROM EpisodeSchedule WHERE
             guid = %(guid)s
         """
         result = DatabaseManager().fetchone_query_and_close(query, {'guid': guid})
         print "looking for schedule updates for %s" % result[0]
-        if result[1] is not None and result[2] is not None:
-            sdata = self.__get_episode_after(result[0], result[1], result[2])
+        if next_episode:
+            if result[1] is not None and result[2] is not None:
+                sdata = self.__get_episode_after(result[0], result[1], result[2])
+            else:
+                sdata = self.__get_next_episode(result[0])
         else:
-            sdata = self.__get_next_episode(result[0])
+            sdata = self.__get_episode_data(result[0], result[1], result[2])
         if sdata:
             if result[4] is not None:
                 prev_stamp = int(result[4])

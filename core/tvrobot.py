@@ -215,7 +215,7 @@ class TvRobot:
                     DatabaseManager().execute_query_and_close(query, {'guid': schedule[0]})
                 else:
                     print "couldn't find a good one. trying again later."
-                    ScheduleManager().update_schedule(schedule[0])
+                    ScheduleManager().update_schedule(schedule[0], False)
 
 
     def update_schedules(self, guids=None):
