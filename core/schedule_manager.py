@@ -64,6 +64,7 @@ class ScheduleManager:
                 return False
         else:
             print "BEEP BEEEEEP TVRAGE IS DOWN(%s)" % response.status_code
+            raise TVRageDownException()
         return data
 
     def __get_episode_data(self, name, season, episode):
@@ -102,6 +103,7 @@ class ScheduleManager:
                 return False
         else:
             print "BEEP BEEEEEP TVRAGE IS DOWN(%s)" % response.status_code
+            raise TVRageDownException()
         return data
 
     def __get_next_episode(self, name):
@@ -135,6 +137,7 @@ class ScheduleManager:
                 return False
         else:
             print "BEEP BEEEEEP TVRAGE IS DOWN(%s)" % response.status_code
+            raise TVRageDownException()
         return data
 
     def __get_show_data(self, name):
@@ -161,6 +164,7 @@ class ScheduleManager:
                 print "ended"
         else:
             print "BEEP BEEEEEP TVRAGE IS DOWN(%s)" % response.status_code
+            raise TVRageDownException()
         return data
 
     def get_old_schedules(self):
@@ -193,13 +197,16 @@ class ScheduleManager:
         """
         result = DatabaseManager().fetchone_query_and_close(query, {'guid': guid})
         print "looking for schedule updates for %s" % result[0]
-        if next_episode:
-            if result[1] is not None and result[2] is not None:
-                sdata = self.__get_episode_after(result[0], result[1], result[2])
+        try:
+            if next_episode:
+                if result[1] is not None and result[2] is not None:
+                    sdata = self.__get_episode_after(result[0], result[1], result[2])
+                else:
+                    sdata = self.__get_next_episode(result[0])
             else:
-                sdata = self.__get_next_episode(result[0])
-        else:
-            sdata = self.__get_episode_data(result[0], result[1], result[2])
+                sdata = self.__get_episode_data(result[0], result[1], result[2])
+        except TVRageDownException, e:
+            return None
         if sdata:
             if result[4] is not None:
                 prev_stamp = int(result[4])
@@ -242,3 +249,9 @@ class ScheduleManager:
             """
             DatabaseManager().execute_query_and_close(query, sdata)
             return sdata
+
+
+class TVRageDownException(Exception):
+    def __init__(self):
+        message = "TVRage is currently down and not responding to API requests."
+        Exception.__init__(self, message)

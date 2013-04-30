@@ -16,6 +16,7 @@ from core.util import Util
 from core.download_manager import DownloadManager
 from core.download_manager import FakeDownloadException
 from core.schedule_manager import ScheduleManager
+from core.schedule_manager import TVRageDownException
 from core.transmission_manager import TransmissionManager
 from core.torrent_search_manager import TorrentSearchManager
 from core.twilio_manager import TwilioManager
@@ -94,6 +95,7 @@ class TvRobot:
         return message
 
     def add_schedule(self, search, user_id = None, user_phone = None, by_date = False):
+        response = None
         if user_id is None:
             user_id = UserManager().get_user_id_by_phone(user_phone)
 
@@ -103,7 +105,10 @@ class TvRobot:
         else:
             sch_method = 'EPNUM'
         sch = {'name': search, 'phone': user_phone, 'sms_guid': 'lolnah', 'schedule_method': sch_method} #sms_guid is here for backwards compatibility 
-        did = ScheduleManager().add_scheduled_episode(sch)
+        try:
+            did = ScheduleManager().add_scheduled_episode(sch)
+        except TVRageDownException, e:
+            response = "Boop. TVRage is down right now, try again later."
         if did is not None:
             print "added %s as %s" % (sch['name'], did['guid'])
             if 'timestamp' in did.keys() and did['timestamp'] is not None:
@@ -117,7 +122,7 @@ class TvRobot:
             else:
                 timestr = ""
             response = "Ok, I added a schedule for %s. %s" % (did['show_name'], timestr)
-        else:
+        elif response is not None:
             print "Couldn't find a currently airing show called %s " % sch['name']
             response = "Couldn't find a currently airing show called %s " % sch['name']
 
