@@ -172,6 +172,9 @@ class TvRobot:
 
 
     def send_completed_sms_subscribers(self, torrent):
+        self.send_sms_to_subscribers(torrent, "BEEP. File's done: %(name)s")
+
+    def send_sms_to_subscribers(self, torrent, message):
         query = """
             SELECT U.phone, S.name FROM User U, Download D, Subscription S WHERE
             D.transmission_guid = %(transmission_guid)s AND
@@ -186,7 +189,7 @@ class TvRobot:
                     name = torrent.name
                 else:
                     name = res[1]
-                TwilioManager().send_sms(phone, "BEEP. File's done: %s" % name)
+                TwilioManager().send_sms(phone, message % {"name": name})
 
 
     def add_scheduled_downloads(self):
@@ -261,6 +264,7 @@ class TvRobot:
                     video_file_name = DownloadManager().get_video_file_path(TransmissionManager().get_files(torrent.id))
                 except FakeDownloadException, e:
                     print "FAKE DOWNLOAD DETECTED!"
+                    self.send_sms_to_subscribers(torrent, "BOOP. Fake download detected: %(name)s")
                 if video_file_name is not None and video_type is not None:
                     video_path = "%s/%s" % (TransmissionManager().get_session().download_dir, video_file_name)
                     print strings.MOVING_VIDEO_FILE % (video_type, video_file_name.encode('ascii', 'ignore'))
@@ -283,6 +287,7 @@ class TvRobot:
                     video_files = DownloadManager().get_all_video_file_paths(TransmissionManager().get_files(torrent.id), kill_samples=("sample" not in torrent.name.lower()))
                 except FakeDownloadException, e:
                     print "FAKE DOWNLOAD DETECTED!"
+                    self.send_sms_to_subscribers(torrent, "BOOP. Fake download detected: %(name)s")
                 if video_files is not None and video_type is not None:
                     for vidja in video_files:
                         video_path = "%s/%s" % (TransmissionManager().get_session().download_dir, vidja)
