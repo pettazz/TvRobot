@@ -80,7 +80,7 @@ class DownloadManager:
         return [f for f in file_list if "sample" not in f.lower() and "trailer" not in f.lower()]
 
     def __filter_video_only(self, file_list):
-        return [f for f in file_list f.lower().rsplit('.', 1)[1] not in config.FILETYPES['video']]
+        return [f for f in file_list if f.lower().rsplit('.', 1)[1] not in config.FILETYPES['video']]
 
     def unrar_file(self, file_path):
         print strings.UNRAR
