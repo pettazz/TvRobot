@@ -70,5 +70,6 @@ DOWNLOAD_CLEAN_COMPLETED = "beep. File's done."
 
 ADDING_TORRENT = "beep beep. Starting to download this torrent."
 ADDING_MAGNET = "bzzzzzeeeeep Adding this magnet before it kills me."
+ADDING_DUPLICATE_MAGNET = "I'm already working on this one, but I'll subscribe you to it since I'm such a nicebot."
 ADDING_DOWNLOAD = u"beeboop. Remembering to clean this %s download up later."
 ADD_COMPLETED = "Beeped the new torrent."

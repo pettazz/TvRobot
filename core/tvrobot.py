@@ -138,36 +138,37 @@ class TvRobot:
         print strings.ADDING_MAGNET
         try:
             torrent = TransmissionManager().add_torrent(magnet_link)
-            torrent_hash = torrent.hashString
-            query = """
-                SELECT guid FROM Download WHERE
-                transmission_guid = %(transmission_guid)s
-            """
-            result = DatabaseManager().fetchone_query_and_close(query, {'transmission_guid': torrent_hash})
-            if result is not None:
-                raise Exception('Torrent already exists in Download Database')
-                # same error as below
+            exists = False
         except TransmissionError, e:
-            # probably due to duplicate torrent trying to be added, TODO: handle this somehow
-            # https://github.com/pettazz/TvRobot/issues/19
-            raise e
+            exists = True
 
-        print strings.ADDING_DOWNLOAD % download_type
-        guid = uuid.uuid4()
-        
+        torrent_hash = torrent.hashString
         query = """
-            INSERT INTO Download
-            (guid, transmission_guid, type, EpisodeSchedule)
-            VALUES
-            (%(guid)s, %(transmission_guid)s, %(type)s, %(EpisodeSchedule)s)
+            SELECT guid FROM Download WHERE
+            transmission_guid = %(transmission_guid)s
         """
-        DatabaseManager().execute_query_and_close(query, {
-            "guid": guid,
-            "transmission_guid": torrent_hash,
-            "type": download_type, 
-            "EpisodeSchedule": schedule_guid
-        })
-        print strings.ADD_COMPLETED
+        result = DatabaseManager().fetchone_query_and_close(query, {'transmission_guid': torrent_hash})
+        if result is not None or exists:
+            print strings.ADDING_DUPLICATE_MAGNET
+            guid = result[0]
+        else:
+            print strings.ADDING_DOWNLOAD % download_type
+            guid = uuid.uuid4()
+            
+            query = """
+                INSERT INTO Download
+                (guid, transmission_guid, type, EpisodeSchedule)
+                VALUES
+                (%(guid)s, %(transmission_guid)s, %(type)s, %(EpisodeSchedule)s)
+            """
+            DatabaseManager().execute_query_and_close(query, {
+                "guid": guid,
+                "transmission_guid": torrent_hash,
+                "type": download_type, 
+                "EpisodeSchedule": schedule_guid
+            })
+            print strings.ADD_COMPLETED
+
         return guid, torrent._getNameString()
 
 
