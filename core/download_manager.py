@@ -46,31 +46,41 @@ class DownloadManager:
             file_name = self.unrar_file(file_name)
         if decompress == 'zip':
             file_name = self.unzip_file(file_name)
-        return file_name
+        if file_name.lower().rsplit('.', 1)[1] not in config.FILETYPES['video']:
+            raise FakeDownloadException()
+        else:
+            return file_name
 
     def get_all_video_file_paths(self, files, kill_samples = True):
         videos = []
         for torrent_id in files:
             print strings.FINDING_VIDEO_FILE % torrent_id
             for f in files[torrent_id]:
-                if kill_samples and ("sample" not in files[torrent_id][f]['name'].lower() and "trailer" not in files[torrent_id][f]['name'].lower()):
-                    ext = files[torrent_id][f]['name'].rsplit('.', 1)[1]
-                    if ext in config.FILETYPES['video'] and (files[torrent_id][f]['selected']):
+                ext = files[torrent_id][f]['name'].rsplit('.', 1)[1]
+                if ext in config.FILETYPES['video'] and (files[torrent_id][f]['selected']):
+                    videos.append(files[torrent_id][f]['name'])
+                elif ext in config.FILETYPES['compressed'] and (files[torrent_id][f]['selected']):
+                    if ext == 'rar':
+                        done = self.unrar_file(files[torrent_id][f]['name'])
                         videos.append(files[torrent_id][f]['name'])
-                    elif ext in config.FILETYPES['compressed'] and (files[torrent_id][f]['selected']):
-                        if ext == 'rar':
-                            done = self.unrar_file(files[torrent_id][f]['name'])
-                            videos.append(files[torrent_id][f]['name'])
-                        elif ext == 'zip':
-                            done = self.unzip_file(files[torrent_id][f]['name'])
-                            videos.append(files[torrent_id][f]['name'])
-                        else:
-                            raise Exception(strings.UNSUPPORTED_FILE_TYPE % files[torrent_id])
+                    elif ext == 'zip':
+                        done = self.unzip_file(files[torrent_id][f]['name'])
+                        videos.append(files[torrent_id][f]['name'])
+                    else:
+                        raise Exception(strings.UNSUPPORTED_FILE_TYPE % files[torrent_id])
+        if kill_samples:
+            videos = self.__filter_samples(videos)
+        videos = self.__filter_video_only(videos)
         if len(videos) > 0:
             return videos
         else:
-            return None
+            raise FakeDownloadException()
 
+    def __filter_samples(self, file_list):
+        return [f for f in file_list if "sample" not in f.lower() and "trailer" not in f.lower()]
+
+    def __filter_video_only(self, file_list):
+        return [f for f in file_list f.lower().rsplit('.', 1)[1] not in config.FILETYPES['video']]
 
     def unrar_file(self, file_path):
         print strings.UNRAR
@@ -190,3 +200,9 @@ class DownloadManager:
         if result is not None:
             result = result[0]
         return result
+
+
+class FakeDownloadException(Exception):
+    def __init__(self):
+        message = "Fake Download detected."
+        Exception.__init__(self, message)

@@ -14,6 +14,7 @@ from core import selenium_launcher
 from core.mysql import DatabaseManager
 from core.util import Util
 from core.download_manager import DownloadManager
+from core.download_manager import FakeDownloadException
 from core.schedule_manager import ScheduleManager
 from core.transmission_manager import TransmissionManager
 from core.torrent_search_manager import TorrentSearchManager
@@ -256,7 +257,10 @@ class TvRobot:
                 showname = None
             if video_type in ('Episode', 'Movie'):
                 #single file
-                video_file_name = DownloadManager().get_video_file_path(TransmissionManager().get_files(torrent.id))
+                try:
+                    video_file_name = DownloadManager().get_video_file_path(TransmissionManager().get_files(torrent.id))
+                except FakeDownloadException, e:
+                    print "FAKE DOWNLOAD DETECTED!"
                 if video_file_name is not None and video_type is not None:
                     video_path = "%s/%s" % (TransmissionManager().get_session().download_dir, video_file_name)
                     print strings.MOVING_VIDEO_FILE % (video_type, video_file_name.encode('ascii', 'ignore'))
@@ -275,7 +279,10 @@ class TvRobot:
                     print strings.UNSUPPORTED_FILE_TYPE % torrent.id
             elif video_type in ('Set', 'Season', 'Series'):
                 #some movies bro
-                video_files = DownloadManager().get_all_video_file_paths(TransmissionManager().get_files(torrent.id), kill_samples=("sample" not in torrent.name.lower()))
+                try:
+                    video_files = DownloadManager().get_all_video_file_paths(TransmissionManager().get_files(torrent.id), kill_samples=("sample" not in torrent.name.lower()))
+                except FakeDownloadException, e:
+                    print "FAKE DOWNLOAD DETECTED!"
                 if video_files is not None and video_type is not None:
                     for vidja in video_files:
                         video_path = "%s/%s" % (TransmissionManager().get_session().download_dir, vidja)
