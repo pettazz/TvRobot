@@ -3,6 +3,8 @@ import uuid
 import requests
 import xml.etree.cElementTree as ElementTree
 
+from fuzzywuzzy import process
+
 from config import TVRAGE
 from mysql import DatabaseManager
 from core.util import XmlDictConfig
@@ -251,6 +253,12 @@ class ScheduleManager:
             """
             DatabaseManager().execute_query_and_close(query, sdata)
             return sdata
+
+    def guess_series_name(self, download_name):
+        query = """ SELECT show_name FROM EpisodeSchedule WHERE 1 """
+        shows = [x[0] for x in DatabaseManager().fetchall_query_and_close(query, {})]
+        matched = process.extractOne(download_name, shows, score_cutoff=50)
+        return matched[0] if matched else None
 
 
 class TVRageDownException(Exception):
