@@ -264,7 +264,7 @@ class TvRobot:
             else:
                 video_type = DownloadManager().get_torrent_type(torrent.hashString)
                 if video_type in ['Episode', 'Series', 'Season']:
-                    showname = self.ScheduleManager().guess_series_name(torrent.name)
+                    showname = ScheduleManager().guess_series_name(torrent.name)
                 else:
                     showname = None
             if video_type in ('Episode', 'Movie'):
