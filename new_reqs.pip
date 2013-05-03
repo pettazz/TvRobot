@@ -6,6 +6,6 @@ requests
 twisted
 twilio
 selenium
-transmissionrpc==0.8.0
+transmissionrpc==0.9.0
 elementtree
 --editable git+git://github.com/seatgeek/fuzzywuzzy.git#egg=fuzzywuzzy
