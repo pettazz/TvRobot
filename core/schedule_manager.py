@@ -54,6 +54,7 @@ class ScheduleManager:
                     airtime = rdata['airtime'].rsplit(' at ', 1)[1]
                     timestring = "%s %s" % (rdata['episode']['airdate'], airtime)
                     timestamp = int(datetime.datetime.strptime(timestring, '%Y-%m-%d %I:%M %p').strftime("%s"))
+                    data['timestamp'] = timestamp
                     # data['timestamp'] = timestamp - TZ_OFFSET
                     data['duration'] = int(rdata['runtime']) * 60
                     data['show_name'] = rdata['name']
@@ -94,6 +95,7 @@ class ScheduleManager:
                     airtime = rdata['airtime'].rsplit(' at ', 1)[1]
                     timestring = "%s %s" % (rdata['episode']['airdate'], airtime)
                     timestamp = int(datetime.datetime.strptime(timestring, '%Y-%m-%d %I:%M %p').strftime("%s"))
+                    data['timestamp'] = timestamp
                     # data['timestamp'] = timestamp - TZ_OFFSET
                     data['duration'] = int(rdata['runtime']) * 60
                     data['show_name'] = rdata['name']
