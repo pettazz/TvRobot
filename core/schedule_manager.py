@@ -204,8 +204,10 @@ class ScheduleManager:
         try:
             if next_episode:
                 if result[1] is not None and result[2] is not None:
+                    print "looking for episode after S%sE%s..." % (int(result[1]).zfill(2), int(result[2]).zfill(2))
                     sdata = self.__get_episode_after(result[0], result[1], result[2])
                 else:
+                    print "looking for nextepisode..."
                     sdata = self.__get_next_episode(result[0])
             else:
                 sdata = self.__get_episode_data(result[0], result[1], result[2])
