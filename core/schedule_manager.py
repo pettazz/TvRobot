@@ -240,25 +240,25 @@ class ScheduleManager:
             return False
 
     def get_next_schedule(self, showname):
-        if showname is not None:
-            guessed_name = self.guess_series_name(showname)
-            if guessed_name is None:
-                return None
-            print "querying my schedule for %s" % guessed_name
-            query = """
-                SELECT timestamp, new FROM EpisodeSchedule
-                WHERE show_name = %(name)s
-            """
-            data = DatabaseManager().fetchone_query_and_close(query, {'name': guessed_name})
-            if data is None:
-                print "found nothing."
-                return None
-            if data[1] == 0:
-                print "dont have a new schedule"
-                return False
-            else:
-                print "gotcha"
-                return data[0]
+        print "raw schedule query for %s, fuzzy matching existing schedules..." % showname
+        guessed_name = self.guess_series_name(showname)
+        if guessed_name is None:
+            return None
+        print "querying my schedule for %s" % guessed_name
+        query = """
+            SELECT timestamp, new FROM EpisodeSchedule
+            WHERE show_name = %(name)s
+        """
+        data = DatabaseManager().fetchone_query_and_close(query, {'name': guessed_name})
+        if data is None:
+            print "found nothing."
+            return None
+        if data[1] == 0:
+            print "dont have a new schedule"
+            return False
+        else:
+            print "gotcha"
+            return data[0]
 
     def add_scheduled_episode(self, data):
         sdata = self.__get_show_data(data['name'])
