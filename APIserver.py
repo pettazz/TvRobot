@@ -4,7 +4,7 @@ from twisted.internet import reactor
 
 import threading, uuid
 import json, urlparse
-import datetime
+import datetime, time
 
 from core.tvrobot import TvRobot
 from core.schedule_manager import ScheduleManager
