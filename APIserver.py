@@ -70,7 +70,7 @@ class SMSAPIHandler(Resource):
                 response = "Beep. I haven't found an airtime for the next episode yet."
             else:
                 sch_time = datetime.datetime.fromtimestamp(int(schedule))
-                response = time.strftime("%c", sch_time.timetuple())
+                response = time.strftime("%A, %b %d at %I:%M %p", sch_time.timetuple())
 
         elif msg_body.lower().startswith('sup'):
             # TODO: allow him to give some simple status updates here
