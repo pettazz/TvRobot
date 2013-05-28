@@ -246,7 +246,7 @@ class ScheduleManager:
                 return None
             query = """
                 SELECT timestamp, new FROM EpisodeSchedule
-                WHERE show_name = %(name)
+                WHERE show_name = %(name)s
             """
             data = DatabaseManager().fetchone_query_and_close(query, {'name': guessed_name})
             if data is None:
