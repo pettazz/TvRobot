@@ -239,6 +239,23 @@ class ScheduleManager:
         else:
             return False
 
+    def get_next_schedule(self, showname):
+        if showname is not None:
+            guessed_name = self.guess_series_name(showname)
+            if guessed_name is None:
+                return None
+            query = """
+                SELECT timestamp, new FROM EpisodeSchedule
+                WHERE show_name = %(name)
+            """
+            data = DatabaseManager().fetchone_query_and_close(query, {'name': guessed_name})
+            if data is None:
+                return None
+            if data[1] == 0:
+                return False
+            else:
+                return data[0]
+
     def add_scheduled_episode(self, data):
         sdata = self.__get_show_data(data['name'])
         user = UserManager().get_user_id_by_phone(data['phone'])

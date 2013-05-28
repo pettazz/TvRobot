@@ -4,8 +4,10 @@ from twisted.internet import reactor
 
 import threading, uuid
 import json, urlparse
+import datetime
 
 from core.tvrobot import TvRobot
+from core.schedule_manager import ScheduleManager
 
 class SMSAPIHandler(Resource):
     def __init__(self):
@@ -59,6 +61,16 @@ class SMSAPIHandler(Resource):
             print "starting worker thread %s" % thread_name
             t.start()
             response = "Beep, cleaning up active downloads."
+
+        elif msg_body.lower().startswith('when is the next '):
+            schedule = ScheduleManager().get_next_schedule(msg_body[17])
+            if schedule is None:
+                response = "Beeboop. I don't have a schedule for a show by that name."
+            elif schedule is False:
+                response = "Beep. I haven't found an airtime for the next episode yet."
+            else:
+                sch_time = datetime.datetime.fromtimestamp(int(schedule))
+                response = time.strftime("%c", sch_time.timetuple())
 
         elif msg_body.lower().startswith('sup'):
             # TODO: allow him to give some simple status updates here
