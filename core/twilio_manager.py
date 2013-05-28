@@ -20,4 +20,4 @@ class TwilioManager:
                                         body=body)
 
     def send_sms_to_user(self, user_id, body):
-        self.send_sms(Usermanager().get_user_phone_by_id(user_id), body)
+        self.send_sms(UserManager().get_user_phone_by_id(user_id), body)
