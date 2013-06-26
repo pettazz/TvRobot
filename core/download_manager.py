@@ -47,7 +47,7 @@ class DownloadManager:
         if decompress == 'zip':
             file_name = self.unzip_file(file_name)
         if decompress:
-            file_dir = TransmissionManager().get_session().download_dir + file_name.rsplit('/*', 1)[0]
+            file_dir = os.path.join(TransmissionManager().get_session().download_dir, file_name.rsplit('/*', 1)[0])
             files_list = [f for f in os.listdir(file_dir) if (os.path.isfile(os.path.join(file_dir, f)) and f.lower().rsplit('.', 1)[1] in config.FILETYPES['video']) ]
             if not files_list:
                 raise FakeDownloadException()
