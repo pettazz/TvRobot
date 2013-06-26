@@ -42,19 +42,20 @@ class DownloadManager:
                             file_name = files[torrent_id][f]['name']
                         else:
                             return None
-        if decompress == 'rar':
-            file_name = self.unrar_file(file_name)
-        if decompress == 'zip':
-            file_name = self.unzip_file(file_name)
         if decompress:
+            if decompress == 'rar':
+                file_name = self.unrar_file(file_name)
+            if decompress == 'zip':
+                file_name = self.unzip_file(file_name)
+
             file_dir = os.path.join(TransmissionManager().get_session().download_dir, file_name.rsplit('/*', 1)[0])
             files_list = [f for f in os.listdir(file_dir) if (os.path.isfile(os.path.join(file_dir, f)) and f.lower().rsplit('.', 1)[1] in config.FILETYPES['video']) ]
             if not files_list:
                 raise FakeDownloadException()
         elif file_name.lower().rsplit('.', 1)[1] not in config.FILETYPES['video']:
             raise FakeDownloadException()
-        else:
-            return file_name
+        
+        return file_name
 
     def get_all_video_file_paths(self, files, kill_samples = True):
         videos = []
