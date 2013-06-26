@@ -46,7 +46,11 @@ class DownloadManager:
             file_name = self.unrar_file(file_name)
         if decompress == 'zip':
             file_name = self.unzip_file(file_name)
-        if file_name.lower().rsplit('.', 1)[1] not in config.FILETYPES['video']:
+        if decompress:
+            files_list = [f for f in os.listdir(file_name) if (os.path.isfile(os.path.join(file_name,f)) and f.lower().rsplit('.', 1)[1] in config.FILETYPES['video']) ]
+            if not files_list:
+                raise FakeDownloadException()
+        elif file_name.lower().rsplit('.', 1)[1] not in config.FILETYPES['video']:
             raise FakeDownloadException()
         else:
             return file_name
