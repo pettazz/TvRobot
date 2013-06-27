@@ -52,8 +52,11 @@ class DownloadManager:
             files_list = [f for f in os.listdir(file_dir) if (os.path.isfile(os.path.join(file_dir, f)) and f.lower().rsplit('.', 1)[1] in config.FILETYPES['video']) ]
             if not files_list:
                 raise FakeDownloadException()
-        elif file_name.lower().rsplit('.', 1)[1] not in config.FILETYPES['video']:
-            raise FakeDownloadException()
+        elif file_name:
+            if file_name.lower().rsplit('.', 1)[1] not in config.FILETYPES['video']:
+                raise FakeDownloadException()
+        else:
+            return None
         
         return file_name
 
