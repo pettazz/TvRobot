@@ -77,6 +77,8 @@ class SMSAPIHandler(Resource):
 
         elif msg_body.lower().startswith('broadcast '):
             user = UserManager().get_user_by_phone(msg_from)
+            print "checking permission for user:"
+            print user
             if user[5] == '999':
                 query = """ SELECT phone FROM User WHERE phone <> '' """
                 phones = DatabaseManager().fetchall_query_and_close(query)
@@ -86,6 +88,8 @@ class SMSAPIHandler(Resource):
                     count = count + 1
 
                 response = 'Broadcast sent to %s users.' % count
+            else:
+                response = 'Beeoop, you don\'t have permission for that.'
 
         elif msg_body.lower().startswith('sup'):
             # TODO: allow him to give some simple status updates here
