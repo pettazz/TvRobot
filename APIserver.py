@@ -81,7 +81,7 @@ class SMSAPIHandler(Resource):
             print user
             if user[5] == '999':
                 query = """ SELECT phone FROM User WHERE phone <> '' """
-                phones = DatabaseManager().fetchall_query_and_close(query)
+                phones = DatabaseManager().fetchall_query_and_close(query, {})
                 count = 0
                 for phone in phones:
                     TwilioManager().send_sms(phone, msg_body[10:])
