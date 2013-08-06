@@ -57,7 +57,7 @@ class UserManager:
         if phone.startswith('+1'):
             phone = phone[2:]
         query = """
-            SELECT id FROM User WHERE
+            SELECT * FROM User WHERE
             phone = %(phone)s
         """
         result = DatabaseManager().fetchone_query_and_close(query, {'phone': phone})
