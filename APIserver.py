@@ -7,7 +7,10 @@ import json, urlparse
 import datetime, time
 
 from core.tvrobot import TvRobot
+from core.mysql import DatabaseManager
 from core.schedule_manager import ScheduleManager
+from core.user_manager import UserManager
+from core.twilio_manager import TwilioManager
 
 class SMSAPIHandler(Resource):
     def __init__(self):
@@ -71,6 +74,18 @@ class SMSAPIHandler(Resource):
             else:
                 sch_time = datetime.datetime.fromtimestamp(int(schedule))
                 response = time.strftime("%A, %b %d at %I:%M %p", sch_time.timetuple())
+
+        elif msg_body.lower().startswith('broadcast '):
+            user = UserManager().get_user_by_phone(msg_from)
+            if user[5] == '999':
+                query = """ SELECT phone FROM User WHERE phone <> '' """
+                phones = DatabaseManager().fetchall_query_and_close(query)
+                count = 0
+                for phone in phones:
+                    TwilioManager().send_sms(phone, msg_body[10:])
+                    count = count + 1
+
+                response = 'Broadcast sent to %s users.' % count
 
         elif msg_body.lower().startswith('sup'):
             # TODO: allow him to give some simple status updates here
