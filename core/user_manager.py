@@ -52,3 +52,16 @@ class UserManager:
             return result[0]
         else:
             return None
+
+    def get_user_by_phone(self, phone):
+        if phone.startswith('+1'):
+            phone = phone[2:]
+        query = """
+            SELECT id FROM User WHERE
+            phone = %(phone)s
+        """
+        result = DatabaseManager().fetchone_query_and_close(query, {'phone': phone})
+        if result is not None:
+            return result
+        else:
+            return None
