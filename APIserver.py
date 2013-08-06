@@ -84,7 +84,7 @@ class SMSAPIHandler(Resource):
                 phones = DatabaseManager().fetchall_query_and_close(query, {})
                 count = 0
                 for phone in phones:
-                    TwilioManager().send_sms(phone, msg_body[10:])
+                    TwilioManager().send_sms(phone[0], msg_body[10:])
                     count = count + 1
 
                 response = 'Broadcast sent to %s users.' % count
