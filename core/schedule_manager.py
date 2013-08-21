@@ -47,7 +47,7 @@ class ScheduleManager:
                         print "BOOP. Can't find the next episode of %s." % name
                         return data
 
-                if rdata['episode']['number'] == "%sx%s" % (str(attempted_season).zfill(2), str(attempted_episode).zfill(2)):
+                if (rdata['episode']['number'] == "%sx%s" % (str(attempted_season).zfill(2), str(attempted_episode).zfill(2))) and not rdata['episode']['airdate'] == '0000-00-00':
                     data['season'] = attempted_season
                     data['episode'] = attempted_episode
                     # EPAPI doesnt have timestamps HOORAY
@@ -88,7 +88,7 @@ class ScheduleManager:
                     print "BOOP. Can't find episode info for %s S%sE%s." % (name, season, episode)
                     return data
 
-                if rdata['episode']['number'] == "%sx%s" % (str(season).zfill(2), str(episode).zfill(2)):
+                if (rdata['episode']['number'] == "%sx%s" % (str(season).zfill(2), str(episode).zfill(2))) and not rdata['episode']['airdate'] == '0000-00-00':
                     data['season'] = season
                     data['episode'] = episode
                     # EPAPI doesnt have timestamps HOORAY
