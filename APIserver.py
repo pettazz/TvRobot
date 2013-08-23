@@ -75,6 +75,16 @@ class SMSAPIHandler(Resource):
                 sch_time = datetime.datetime.fromtimestamp(int(schedule))
                 response = time.strftime("%A, %b %d at %I:%M %p", sch_time.timetuple())
 
+        elif msg_body.lower().startswith('punt '):
+            showname = ScheduleManager().guess_series_name(msg_body[5:])
+            query = """ UPDATE EpisodeSchedule SET  new = 1, timestamp = 0, episode_number = episode_number + 1 WHERE show_name = %(showname)s """
+            done = DatabaseManager().execute_query_and_close(query, {'showname': showname})
+
+            query = """ SELECT season_number, episode_number FROM EpisodeSchedule WHERE show_name = %(showname)s """
+            done = DatabaseManager().fecthone_query_and_close(query, {'showname': showname})            
+
+            response = 'Okay, I punted %s to S%sE%s' % (showname, done[0], done[1])
+
         elif msg_body.lower().startswith('broadcast '):
             user = UserManager().get_user_by_phone(msg_from)
             print "checking permission for user:"
