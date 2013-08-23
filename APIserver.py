@@ -81,7 +81,7 @@ class SMSAPIHandler(Resource):
             done = DatabaseManager().execute_query_and_close(query, {'showname': showname})
 
             query = """ SELECT season_number, episode_number FROM EpisodeSchedule WHERE show_name = %(showname)s """
-            done = DatabaseManager().fecthone_query_and_close(query, {'showname': showname})            
+            done = DatabaseManager().fetchone_query_and_close(query, {'showname': showname})            
 
             response = 'Okay, I punted %s to S%sE%s' % (showname, done[0], done[1])
 
