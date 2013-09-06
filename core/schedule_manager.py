@@ -43,13 +43,17 @@ class ScheduleManager:
                         return data
 
                 if (rdata['episode']['number'] == "%sx%s" % (str(attempted_season).zfill(2), str(attempted_episode).zfill(2))) and not rdata['episode']['airdate'] == '0000-00-00':
-                    data['season'] = attempted_season
-                    data['episode'] = attempted_episode
                     # EPAPI doesnt have timestamps HOORAY
                     airtime = rdata['airtime'].rsplit(' at ', 1)[1]
                     timestring = "%s %s" % (rdata['episode']['airdate'], airtime)
-                    timestamp = int(datetime.datetime.strptime(timestring, '%Y-%m-%d %I:%M %p').strftime("%s"))
+                    try:
+                        timestamp = int(datetime.datetime.strptime(timestring, '%Y-%m-%d %I:%M %p').strftime("%s"))
+                    except:
+                        print "malformed timestring: %s" % timestring
+                        return data
                     data['timestamp'] = timestamp
+                    data['season'] = attempted_season
+                    data['episode'] = attempted_episode
                     # data['timestamp'] = timestamp - TZ_OFFSET
                     data['duration'] = int(rdata['runtime']) * 60
                     data['show_name'] = rdata['name']
