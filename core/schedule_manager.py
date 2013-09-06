@@ -19,7 +19,7 @@ TVRAGE_EPISODE_API = 'http://services.tvrage.com/feeds/episodeinfo.php?show=%s&e
 
 class ScheduleManager:
 
-    def __get_episode_after(self, name, season, episode):
+    def __get_episode_after(self, name, season, episode, try_increment_season = True):
         data = {'season': None, 'episode': None, 'timestamp': None}
         attempted_season = int(season)
         attempted_episode = int(episode) + 1
@@ -34,17 +34,12 @@ class ScheduleManager:
             print rdata
             if 'status' in rdata.keys() and rdata['status'] in ACTIVE_SHOW_STATUS:
                 if 'episode' not in rdata.keys():
-                    attempted_season = int(season) + 1
-                    attempted_episode = 1
-                    try:
-                        response = requests.get(TVRAGE_EPISODE_API % (name.replace(' ', '%20'), attempted_season, attempted_episode))
-                    except:
-                        print "BEEP. TVRage isn't responding to our request for this one, we'll have to try again later."
-                        return data
-
-                    if 'episode' not in rdata.keys():
-                        # handle this better
-                        print "BOOP. Can't find the next episode of %s." % name
+                    if try_increment_season:
+                        attempted_season = int(season) + 1
+                        attempted_episode = 0
+                        print "episode not found. searching next season for S%sE%s" % (attempted_season, attempted_episode)
+                        return self.__get_episode_after(name, attempted_season, attempted_episode, False)
+                    else:
                         return data
 
                 if (rdata['episode']['number'] == "%sx%s" % (str(attempted_season).zfill(2), str(attempted_episode).zfill(2))) and not rdata['episode']['airdate'] == '0000-00-00':
