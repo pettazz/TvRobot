@@ -36,8 +36,8 @@ class ScheduleManager:
                 if 'episode' not in rdata.keys():
                     if try_increment_season:
                         attempted_season = int(season) + 1
-                        attempted_episode = 0
-                        print "episode not found. searching next season for S%sE%s" % (attempted_season, attempted_episode)
+                        attempted_episode = 1
+                        print "episode not found. searching next season for S%sE%s" % (str(attempted_season).zfill(2), str(attempted_episode).zfill(2))
                         return self.__get_episode_after(name, attempted_season, attempted_episode, False)
                     else:
                         return data
