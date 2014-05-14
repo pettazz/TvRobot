@@ -53,7 +53,7 @@ class TvRobot:
                 try:
                     self.driver = webdriver.Remote("http://%s:%s/wd/hub"%
                         (config.SELENIUM['server'], config.SELENIUM['port']),
-                        webdriver.DesiredCapabilities.HTMLUNITWITHJS)
+                        webdriver.DesiredCapabilities.HTMLUNIT)
                     #self.driver = webdriver.Firefox()
                     break
                 except Exception, e:
