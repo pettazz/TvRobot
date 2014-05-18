@@ -51,11 +51,9 @@ class TvRobot:
 
             for x in range(config.SELENIUM['timeout']):
                 try:
-                    dc = webdriver.DesiredCapabilities.HTMLUNIT
-                    dc['javascriptEnabled'] = False
                     self.driver = webdriver.Remote("http://%s:%s/wd/hub"%
                         (config.SELENIUM['server'], config.SELENIUM['port']),
-                        dc)
+                        webdriver.DesiredCapabilities.HTMLUNITWITHJS)
                     #self.driver = webdriver.Firefox()
                     break
                 except Exception, e:
