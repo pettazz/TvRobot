@@ -2,15 +2,12 @@ import os
 import time, datetime
 import uuid
 
-from selenium import webdriver
 import transmissionrpc
 from transmissionrpc.error import TransmissionError
-
 
 import core.strings as strings
 import core.config as config
 
-from core import selenium_launcher
 from core.mysql import DatabaseManager
 from core.util import Util
 from core.download_manager import DownloadManager
@@ -26,46 +23,10 @@ class TvRobot:
 
     def __init__(self):
         #set dem loggings
-        if not os.path.exists(config.SELENIUM['log_path']):
-            os.mkdir(config.SELENIUM['log_path'])
         if not os.path.exists(config.TVROBOT['log_path']):
             os.mkdir(config.TVROBOT['log_path'])
 
         print strings.HELLO
-
-        
-
-    def __del__(self):
-        try:
-            self.driver.quit()
-        except:
-            pass
-
-    def _start_selenium(self):
-        if not hasattr(self, 'driver') or self.driver is None:
-            if config.SELENIUM['server'] == "localhost":
-                self.selenium_server = selenium_launcher.execute_selenium(
-                    config.SELENIUM['server'],
-                    config.SELENIUM['port'],
-                    config.SELENIUM['log_path'])
-
-            for x in range(config.SELENIUM['timeout']):
-                try:
-                    self.driver = webdriver.Remote("http://%s:%s/wd/hub"%
-                        (config.SELENIUM['server'], config.SELENIUM['port']),
-                        webdriver.DesiredCapabilities.HTMLUNITWITHJS)
-                    #self.driver = webdriver.Firefox()
-                    break
-                except Exception, e:
-                    print e
-                    time.sleep(1)
-
-            if not hasattr(self, 'driver') or self.driver is None:
-                raise Exception (
-                "Couldn't connect to the selenium server at %s after %s seconds." %
-                (config.SELENIUM['server'], config.SELENIUM['timeout']))
-        else:
-            print "selenium driver already initialized"
 
 
     def add_download(self, download_type, search, user_id = None, user_phone = None, send_sms = False):
@@ -79,8 +40,7 @@ class TvRobot:
             user_phone = UserManager().get_user_phone_by_id(user_id)
 
         print "Beeeep, searching for %s" % search
-        self._start_selenium()
-        magnet = TorrentSearchManager(self.driver).get_magnet(search, download_type, False)
+        magnet = TorrentSearchManager().get_magnet(search, download_type, False)
         if magnet is None:
             message = "BOOP. Couldn't find %s." % search
         elif magnet is False:
@@ -200,8 +160,6 @@ class TvRobot:
 
     def add_scheduled_downloads(self):
         schedules = ScheduleManager().get_scheduled_tv()
-        if schedules:
-            self._start_selenium()
         for schedule in schedules:
             if schedule[10] == 1:
                 if schedule[11] == 'EPNUM':
@@ -214,7 +172,7 @@ class TvRobot:
                 else:
                     raise Exception(strings.UNSUPPORTED_SCHEDULE_TYPE % schedule[10])
                 print "Beeeep, searching for %s" % search_str
-                magnet = TorrentSearchManager(self.driver).get_magnet(search_str, 'Episode', (schedule[7] == 0))
+                magnet = TorrentSearchManager().get_magnet(search_str, 'Episode', (schedule[7] == 0))
                 if magnet:
                     guid, torrent_name = self.add_magnet(magnet, 'Episode', schedule[0])
                     self.add_subscription(guid, schedule[9], search_str)

@@ -1,9 +1,9 @@
 import re
-from selenium import webdriver
-from selenium.webdriver.common.by import By
+
+import requests
+from bs4 import BeautifulSoup
+
 from config import TVROBOT
-from core.selenium_fixtures import page_interactions
-from core.selenium_fixtures import page_loads
 
 
 SEARCH_URL = {
@@ -19,10 +19,6 @@ SEARCH_URL = {
 
 class TorrentSearchManager:
 
-    def __init__(self, driver):
-        self.driver = driver
-        self.page_loads = page_loads.PageLoads(self.driver)
-
     def get_magnet(self, search, media_type, sd_fallback = False):
         quality = 'HD'
         search = re.sub('[^A-Z a-z0-9]+', '', search)
@@ -37,29 +33,30 @@ class TorrentSearchManager:
             return rows
 
     def _find_rows(self, search, media_type, quality):
-        self.driver.get(SEARCH_URL[media_type][quality] % search)
-        self.page_loads.wait_for_element_present("p#footer", By.CSS_SELECTOR, 120)
-        if page_interactions.is_text_visible(self.driver, 'No hits. Try adding an asterisk in you search phrase.', 'h2'):
+        r = requests.get(SEARCH_URL[media_type][quality] % search)
+        soup = BeautifulSoup(r.text)
+        if soup.h2.text == 'No hits. Try adding an asterisk in you search phrase.':
             #sometimes TPB likes to strip apostrophes
             if search.find('\'') > -1:
                 again = self._find_rows(search.replace('\'', ''), media_type, quality)
                 if again:
                     return again
             print "No results found."
-            if page_interactions.is_text_visible(self.driver, 'Search engine overloaded, please try again in a few seconds', 'div#main-content'):
+            if soup.find(id='main-content').text == 'Search engine overloaded, please try again in a few seconds':
                 print "TPB is overloaded."
                 return False
             return None
         else:
-            rows = self.driver.find_elements_by_css_selector('table#searchResult tbody tr')
+            rows = soup.select('table#searchResult > tr')
             return rows
 
     def _get_best_row_magnet(self, rows):
         print "checking torrent ratio..."
         done = None
         for resultrow in rows:
-            seeds = float(resultrow.find_element_by_xpath('.//td[3]').text)
-            leechers = float(resultrow.find_element_by_xpath('.//td[4]').text)
+            cols = resultrow.find_all('td')
+            seeds = float(cols[3].text)
+            leechers = float(cols[4].text)
             print "SE: %s; LE: %s" % (seeds, leechers)
             if leechers == 0:
                 ratio = -1
@@ -67,11 +64,7 @@ class TorrentSearchManager:
                 ratio = seeds / leechers
             if ratio > TVROBOT['torrent_ratio_threshold']:
                 print "ratio of %s is above threshold, downloading dat shit" % ratio
-                #this is janky because htmlunit cant get the href attr for some reason. 
-                #http://stackoverflow.com/questions/7263824/get-html-source-of-webelement-in-selenium-webdriver-python
-                magnet_element = resultrow.find_element_by_xpath('.//td[2]')
-                magnet_element_source = self.driver.execute_script('return arguments[0].innerHTML;', magnet_element)
-                magnet = magnet_element_source[magnet_element_source.find('magnet:'):].split('"', 1)[0]
+                magnet = cols[1].find_all(title='Download this torrent using magnet')[0]['href']
                 print "MAGNET LINK:\n%s\n" % magnet
                 return magnet
             else:
