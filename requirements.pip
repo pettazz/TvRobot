@@ -1,5 +1,6 @@
 MySQL_python
 beautifulsoup4
+fuzzywuzzy
 pycrypto
 fabric
 requests
