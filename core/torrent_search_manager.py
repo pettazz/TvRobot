@@ -55,8 +55,8 @@ class TorrentSearchManager:
         done = None
         for resultrow in rows:
             cols = resultrow.find_all('td')
-            seeds = float(cols[3].text)
-            leechers = float(cols[4].text)
+            seeds = float(cols[2].text)
+            leechers = float(cols[3].text)
             print "SE: %s; LE: %s" % (seeds, leechers)
             if leechers == 0:
                 ratio = -1
