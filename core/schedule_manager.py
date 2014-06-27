@@ -281,7 +281,7 @@ class ScheduleManager:
     def guess_series_name(self, download_name):
         query = """ SELECT show_name FROM EpisodeSchedule WHERE 1 """
         shows = [x[0] for x in DatabaseManager().fetchall_query_and_close(query, {})]
-        matched = process.extractOne(download_name, shows, score_cutoff=50)
+        matched = process.extractOne(download_name, shows, score_cutoff=75)
         return matched[0] if matched else None
 
 
