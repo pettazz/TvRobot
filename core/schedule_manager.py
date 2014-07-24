@@ -42,18 +42,15 @@ class ScheduleManager:
                     else:
                         return data
 
-                if (rdata['episode']['number'] == "%sx%s" % (str(attempted_season).zfill(2), str(attempted_episode).zfill(2))) and not rdata['episode']['airdate'] == '0000-00-00':
+                if (rdata['episode']['number'] == "%sx%s" % (str(attempted_season).zfill(2), str(attempted_episode).zfill(2))) and not rdata['episode']['airdate'] == '0000-00-00' and 'airtime' in rdata.keys():
                     # EPAPI doesnt have timestamps HOORAY
-                    if type(rdata['airtime']) == str:
-                        airtime = rdata['airtime'].rsplit(' at ', 1)[1]
-                        timestring = "%s %s" % (rdata['episode']['airdate'], airtime)
-                        try:
-                            timestamp = int(datetime.datetime.strptime(timestring, '%Y-%m-%d %I:%M %p').strftime("%s"))
-                        except:
-                            print "malformed timestring: %s" % timestring
-                            return data
-                    else:
-                        timestamp = rdata['airtime']['text']
+                    airtime = rdata['airtime'].rsplit(' at ', 1)[1]
+                    timestring = "%s %s" % (rdata['episode']['airdate'], airtime)
+                    try:
+                        timestamp = int(datetime.datetime.strptime(timestring, '%Y-%m-%d %I:%M %p').strftime("%s"))
+                    except:
+                        print "malformed timestring: %s" % timestring
+                        return data
                     data['timestamp'] = timestamp
                     data['season'] = attempted_season
                     data['episode'] = attempted_episode
@@ -90,16 +87,13 @@ class ScheduleManager:
                     print "BOOP. Can't find episode info for %s S%sE%s." % (name, season, episode)
                     return data
 
-                if (rdata['episode']['number'] == "%sx%s" % (str(season).zfill(2), str(episode).zfill(2))) and not rdata['episode']['airdate'] == '0000-00-00':
+                if (rdata['episode']['number'] == "%sx%s" % (str(season).zfill(2), str(episode).zfill(2))) and not rdata['episode']['airdate'] == '0000-00-00' and 'airtime' in rdata.keys():
                     data['season'] = season
                     data['episode'] = episode
                     # EPAPI doesnt have timestamps HOORAY
-                    if type(rdata['airtime']) == str:
-                        airtime = rdata['airtime'].rsplit(' at ', 1)[1]
-                        timestring = "%s %s" % (rdata['episode']['airdate'], airtime)
-                        timestamp = int(datetime.datetime.strptime(timestring, '%Y-%m-%d %I:%M %p').strftime("%s"))
-                    else:
-                        timestamp = rdata['airtime']['text']
+                    airtime = rdata['airtime'].rsplit(' at ', 1)[1]
+                    timestring = "%s %s" % (rdata['episode']['airdate'], airtime)
+                    timestamp = int(datetime.datetime.strptime(timestring, '%Y-%m-%d %I:%M %p').strftime("%s"))
                     data['timestamp'] = timestamp
                     # data['timestamp'] = timestamp - TZ_OFFSET
                     data['duration'] = int(rdata['runtime']) * 60
